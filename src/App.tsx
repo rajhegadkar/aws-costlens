@@ -368,7 +368,7 @@ export function App() {
         return <InvoiceReconciliationPage selectedMonth={selectedMonth} />;
 
       case 'inventory':
-        return <InventoryPage />;
+        return <InventoryPage selectedMonth={selectedMonth} />;
 
       case 'activity':
         return <ActivityPage />;

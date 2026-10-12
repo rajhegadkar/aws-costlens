@@ -285,6 +285,12 @@ export interface Ec2InstanceInventoryItem {
   tags: Record<string, string>;
   vpcId?: string;
   subnetId?: string;
+  hourlyRate?: number;
+  currentMonthCost?: number;
+  estimatedMonthlyCost?: number;
+  computeCost?: number;
+  storageAndIpCost?: number;
+  costBreakdown?: string;
 }
 
 export interface S3BucketInventoryItem {
@@ -292,6 +298,12 @@ export interface S3BucketInventoryItem {
   creationDate?: string;
   region?: string;
   tags?: Record<string, string>;
+  currentMonthCost?: number;
+  estimatedMonthlyCost?: number;
+  percentOfS3Total?: number;
+  estimatedSizeGb?: number;
+  storageClass?: string;
+  costBreakdown?: string;
 }
 
 export interface RdsInstanceInventoryItem {
@@ -303,15 +315,22 @@ export interface RdsInstanceInventoryItem {
   region: string;
   multiAz?: boolean;
   endpoint?: string;
+  currentMonthCost?: number;
+  estimatedMonthlyCost?: number;
 }
 
 export interface ResourceInventorySummary {
   scannedAt: string;
+  billingPeriod?: string;
   totalEc2Instances: number;
   runningEc2Instances: number;
   stoppedEc2Instances: number;
   totalS3Buckets: number;
   totalRdsDatabases: number;
+  totalEc2CurrentMonthCost?: number;
+  totalEc2EstimatedMonthlyCost?: number;
+  totalS3CurrentMonthCost?: number;
+  totalS3EstimatedMonthlyCost?: number;
   activeRegions: string[];
   ec2Instances: Ec2InstanceInventoryItem[];
   s3Buckets: S3BucketInventoryItem[];

@@ -169,8 +169,10 @@ export async function fetchInvoiceReconciliation(month?: string): Promise<Invoic
   return res.json();
 }
 
-export async function fetchResourceInventory(refresh = false): Promise<ResourceInventorySummary> {
-  const res = await apiFetch(`${API_BASE}/inventory/resources?refresh=${refresh}`);
+export async function fetchResourceInventory(refresh = false, month?: string): Promise<ResourceInventorySummary> {
+  const base = `${API_BASE}/inventory/resources?refresh=${refresh}`;
+  const url = month ? `${base}&month=${encodeURIComponent(month)}` : base;
+  const res = await apiFetch(url);
   if (!res.ok) throw new Error('Failed to scan machine inventory');
   return res.json();
 }

@@ -267,7 +267,8 @@ apiRouter.get('/cost/tags', async (req: Request, res: Response) => {
 apiRouter.get('/inventory/resources', async (req: Request, res: Response) => {
   try {
     const force = req.query.refresh === 'true';
-    const inventory = await InventoryService.getInventory(force);
+    const month = (req.query.month as string) || undefined;
+    const inventory = await InventoryService.getInventory(force, month);
     res.json(inventory);
   } catch (err: any) {
     res.status(500).json({ error: err.message });

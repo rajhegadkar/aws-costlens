@@ -20,6 +20,7 @@ import {
   getAvailableMonths,
   setDemoMode
 } from '../server/aws/costExplorerService.js';
+import { InventoryService } from '../server/aws/inventoryService.js';
 
 describe('Explanation Dictionary & Smart Categorization', () => {
   it('accurately categorizes AI & ML services including Bedrock and Claude models', () => {
@@ -186,6 +187,25 @@ describe('CostExplorerService & Category Deep-Dives', () => {
     expect(searchRes.title).toBeTruthy();
     expect(searchRes.summary).toContain('$');
     expect(searchRes.suggestedAction?.page).toBe('anomalies');
+  });
+
+  it('populates per-EC2-instance and per-S3-bucket current billing and run-rates in InventoryService', async () => {
+    const demoInv = await InventoryService.getInventory(false, '2026-10');
+    expect(demoInv.ec2Instances.length).toBeGreaterThan(0);
+    expect(demoInv.s3Buckets.length).toBeGreaterThan(0);
+    for (const inst of demoInv.ec2Instances) {
+      expect(typeof inst.currentMonthCost).toBe('number');
+      expect(typeof inst.estimatedMonthlyCost).toBe('number');
+      expect(typeof inst.hourlyRate).toBe('number');
+      expect(inst.costBreakdown).toBeTruthy();
+    }
+    for (const bucket of demoInv.s3Buckets) {
+      expect(typeof bucket.currentMonthCost).toBe('number');
+      expect(typeof bucket.estimatedMonthlyCost).toBe('number');
+      expect(typeof bucket.percentOfS3Total).toBe('number');
+      expect(typeof bucket.estimatedSizeGb).toBe('number');
+      expect(bucket.storageClass).toBeTruthy();
+    }
   });
 });
 
