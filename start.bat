@@ -38,7 +38,7 @@ if not exist "node_modules\" (
 )
 
 :: 4. Build application if dist is missing
-if not exist "dist\" (
+if not exist "dist\server\server\index.js" (
     echo [INFO] Building production client and server bundles...
     call npm run build
     if %ERRORLEVEL% neq 0 (

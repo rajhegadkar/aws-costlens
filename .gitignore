@@ -5,6 +5,8 @@ dist/
 data/
 scratch/
 *.log
+*.zip
 .DS_Store
 Thumbs.db
+
 

@@ -36,7 +36,7 @@ if [ ! -d "node_modules" ]; then
 fi
 
 # 4. Check for production build
-if [ ! -d "dist" ]; then
+if [ ! -f "dist/server/server/index.js" ]; then
     echo "[INFO] Building production bundle..."
     npm run build
 fi

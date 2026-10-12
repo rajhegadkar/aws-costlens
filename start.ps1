@@ -40,7 +40,7 @@ if (-not (Test-Path "node_modules")) {
 }
 
 # 4. Check for production build
-if (-not (Test-Path "dist")) {
+if (-not (Test-Path "dist/server/server/index.js")) {
     Write-Host "[INFO] Building production bundle..." -ForegroundColor Cyan
     npm run build
     if ($LASTEXITCODE -ne 0) {
