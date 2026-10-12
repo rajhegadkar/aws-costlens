@@ -1,0 +1,21 @@
+services:
+  costlens:
+    build: .
+    container_name: aws-costlens
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - HOST=0.0.0.0
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - APP_ADMIN_USER=${APP_ADMIN_USER:-admin}
+      - APP_ADMIN_PASSWORD=${APP_ADMIN_PASSWORD:-admin123}
+      - JWT_SECRET=${JWT_SECRET:-aws-costlens-secure-local-session-2026}
+    volumes:
+      - ~/.aws:/root/.aws:ro
+      - ./data:/app/data
+
