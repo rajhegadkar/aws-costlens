@@ -6,7 +6,8 @@ data/
 scratch/
 *.log
 *.zip
+thumbs.db
 .DS_Store
-Thumbs.db
 
-
+# Local presentation documents (not committed to public repository)
+docs/PRESENTATION_GUIDE*.md

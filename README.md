@@ -285,6 +285,8 @@ npm start
 
 ```text
 aws-costlens/
+├── docs/                           # Standard Operating Procedures & guides
+│   └── SOP_GUIDE.md                # Enterprise SOP for deployment, security & operations
 ├── server/                         # Node.js + Express + TypeScript Backend
 │   ├── aws/
 │   │   ├── awsClients.ts           # Modular AWS SDK v3 client factory
