@@ -1520,7 +1520,7 @@ export class CostExplorerService {
           recs: [
             'Review stopped vs running instances on the Machine Names & Inventory page.',
             'Schedule automated stopping of non-production staging servers during off-hours.',
-            'Evaluate Compute Savings Plans or 1-year Reserved Instances for 24/7 baseline servers like DU1_nbim-prod-main-server to save up to 40%.'
+            'Evaluate Compute Savings Plans or 1-year Reserved Instances for 24/7 baseline production servers to save up to 40%.'
           ]
         },
         Storage: {

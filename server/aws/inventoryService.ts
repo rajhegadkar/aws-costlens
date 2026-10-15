@@ -101,17 +101,12 @@ function classifyS3BucketProfile(bucketName: string): {
   // 1. Glacier Deep Archive & Cold Backup Buckets
   if (
     lower.includes('archive') ||
-    lower.includes('deleted-storage') ||
+    lower.includes('deleted') ||
     lower.includes('backup') ||
-    lower.includes('backeup')
+    lower.includes('cold') ||
+    lower.includes('glacier')
   ) {
-    const baseWeight = lower.includes('s2b-client-data-archive')
-      ? 38
-      : lower.includes('nbim-file-server-deleted-storage')
-      ? 24
-      : lower.includes('aiml-data-backup')
-      ? 22
-      : 10;
+    const baseWeight = lower.includes('archive') ? 35 : lower.includes('deleted') ? 25 : 20;
     return {
       weight: baseWeight * jitter,
       storageClass: 'Glacier Deep Archive + Standard',
@@ -120,30 +115,23 @@ function classifyS3BucketProfile(bucketName: string): {
     };
   }
 
-  // 2. Primary Production File Servers, Point-Cloud & AI/ML Training Datasets
+  // 2. Primary Production File Servers, Media, Datasets & AI/ML Training Buckets
   if (
-    lower === 'nbim-file-server' ||
-    lower.includes('training-data') ||
-    lower.includes('dataset-transfered-aiml') ||
-    lower.includes('bim-modeling-data') ||
-    lower.includes('nvision-ai-storage') ||
-    lower.includes('scantobim-model') ||
-    lower.includes('segmentation-results') ||
-    lower.includes('scantobim-pct') ||
-    lower.includes('nwd-processed-file') ||
-    lower.includes('projectdata') ||
-    lower.includes('modelchecker-prod') ||
-    lower.includes('caterpillarbucket') ||
-    lower.includes('pts3dpdfbucket')
+    lower.includes('file-server') ||
+    lower.includes('training') ||
+    lower.includes('dataset') ||
+    lower.includes('storage') ||
+    lower.includes('data') ||
+    lower.includes('media') ||
+    lower.includes('model') ||
+    lower.includes('processed') ||
+    lower.includes('raw')
   ) {
-    const baseWeight =
-      lower === 'nbim-file-server'
-        ? 95
-        : lower.includes('training-data') || lower.includes('dataset-transfered-aiml')
-        ? 78
-        : lower.includes('bim-modeling-data') || lower.includes('nvision-ai-storage')
-        ? 64
-        : 42;
+    const baseWeight = lower.includes('file-server')
+      ? 80
+      : lower.includes('training') || lower.includes('dataset')
+      ? 70
+      : 40;
     return {
       weight: baseWeight * jitter,
       storageClass: 'S3 Standard (High-Volume Data)',
@@ -152,18 +140,19 @@ function classifyS3BucketProfile(bucketName: string): {
     };
   }
 
-  // 3. Installer & Public Web / App Delivery Buckets
+  // 3. Web Assets, Frontend Hosting, CDN Origin & Installer Delivery Buckets
   if (
-    lower.includes('installer.') ||
-    lower.includes('trynow.') ||
-    lower.includes('.scantobim.ai') ||
-    lower.includes('ncircletech.com') ||
-    lower.includes('ncircle-website') ||
-    lower.includes('thatopenviewer') ||
-    lower.includes('plugin-adminpanel') ||
-    lower.includes('dev-nbim-file-server')
+    lower.includes('web') ||
+    lower.includes('app') ||
+    lower.includes('static') ||
+    lower.includes('assets') ||
+    lower.includes('ui') ||
+    lower.includes('portal') ||
+    lower.includes('installer') ||
+    lower.includes('cdn') ||
+    lower.includes('public')
   ) {
-    const baseWeight = lower.includes('installer.') ? 34 : lower.includes('dev-nbim-file-server') ? 28 : 14;
+    const baseWeight = lower.includes('installer') ? 30 : lower.includes('static') ? 22 : 15;
     return {
       weight: baseWeight * jitter,
       storageClass: 'S3 Standard (Web & Artifact Delivery)',
@@ -172,12 +161,13 @@ function classifyS3BucketProfile(bucketName: string): {
     };
   }
 
-  // 4. Managed Service Buckets (AppStream, ElasticBeanstalk, Cost Reports)
+  // 4. Managed AWS System & Service Buckets
   if (
     lower.startsWith('appstream2-') ||
     lower.startsWith('elasticbeanstalk-') ||
     lower.includes('cost-reports') ||
-    lower.includes('revitdesigncheck')
+    lower.includes('logs') ||
+    lower.includes('audit')
   ) {
     return {
       weight: 6.5 * jitter,
