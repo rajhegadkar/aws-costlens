@@ -1,6 +1,7 @@
 # ☁️ AWS CostLens — Self-Hosted, 100% Read-Only AWS FinOps Dashboard
 
 [![CI & Read-Only Security Audit](https://github.com/rajhegadkar/aws-costlens/actions/workflows/ci.yml/badge.svg)](https://github.com/rajhegadkar/aws-costlens/actions)
+[![Release](https://img.shields.io/badge/Release-v1.1.0-orange.svg)](https://github.com/rajhegadkar/aws-costlens/releases/tag/v1.1.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Read-Only Safety](https://img.shields.io/badge/AWS%20API-100%25%20Read--Only%20Enforced-emerald.svg)](#-critical-safety-architecture--100-read-only)
 [![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933.svg)](https://nodejs.org/)
@@ -16,6 +17,7 @@ Run it on **any Windows PC, Ubuntu/Linux server, macOS laptop, Docker container,
 
 ## ✨ Key Features
 
+- 🏷️ **Per-EC2 & Per-S3 Bucket Current Billing**: Direct billing attribution next to every EC2 server name (MTD spend, 30-day run-rate, On-Demand hourly rate, stopped vs. running cost breakdown) and next to each S3 storage bucket (% of total S3 spend, storage size in GB, storage class, 100% reconciled to the official S3 bill).
 - 💬 **Interactive FinOps Q&A Assistant ("Ask CostLens")**: Ask natural-language questions (*"Why did my bill increase?"*, *"How much is EC2?"*, *"How much am I spending on Claude & Bedrock AI?"*, *"Which region costs the most?"*) and receive verified answers with 1-click drilldowns.
 - ⚡ **5 Category Deep-Dives**: Dedicated component-level breakdowns and optimization guides for **Compute**, **Storage**, **Databases**, **Data Transfer / Networking**, and **AI & Bedrock (`AI & ML`)**.
 - 🧾 **Exact Bill & Invoice Reconciliation**: Reconcile monthly AWS usage charges, credits, and statutory taxes (GST / VAT / Sales Tax) line-by-line against official AWS PDF invoices.
