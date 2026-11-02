@@ -1,6 +1,6 @@
 {
   "name": "aws-cost-explorer-local",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Local, read-only AWS Cost Explorer dashboard for non-technical users",
   "private": true,
   "type": "module",

@@ -9,16 +9,18 @@ import {
   XCircle,
   DollarSign,
   ArrowUpDown,
-  TrendingUp
+  TrendingUp,
+  Building2
 } from 'lucide-react';
 import { fetchResourceInventory } from '../api/client.js';
 import { ResourceInventorySummary } from '../../shared/types.js';
 
 interface InventoryPageProps {
   selectedMonth?: string;
+  onNavigate?: (page: string) => void;
 }
 
-export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth }) => {
+export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onNavigate }) => {
   const [inventory, setInventory] = useState<ResourceInventorySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -113,14 +115,26 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth }) =
           </p>
         </div>
 
-        <button
-          onClick={() => loadData(true)}
-          disabled={refreshing}
-          className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-200 transition-all shadow-sm shrink-0 self-start sm:self-auto"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-brand-400' : ''}`} />
-          <span>Re-Scan Cloud Resources</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate('departments')}
+              className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs transition-all shadow-sm"
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>V2 Department Allocation</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => loadData(true)}
+            disabled={refreshing}
+            className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-200 transition-all shadow-sm shrink-0 self-start sm:self-auto"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-brand-400' : ''}`} />
+            <span>Re-Scan Cloud Resources</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards */}

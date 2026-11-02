@@ -21,6 +21,7 @@ import {
   Activity,
   Sparkles,
   HelpCircle,
+  Building2,
   X
 } from 'lucide-react';
 import type { DeepDiveCategory } from '../../../shared/types.js';
@@ -58,6 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'datatransfer', label: 'Data Transfer', icon: ArrowLeftRight, category: 'Deep Dives' },
     { id: 'ai', label: 'AI & Bedrock', icon: Bot, category: 'Deep Dives' },
 
+    { id: 'departments', label: 'Department Bifurcation', icon: Building2, category: 'Allocation', badge: 'V2' },
     { id: 'tags', label: 'Cost Tags', icon: Tags, category: 'Allocation' },
     { id: 'accounts', label: 'Linked Accounts', icon: Users, category: 'Allocation' },
 

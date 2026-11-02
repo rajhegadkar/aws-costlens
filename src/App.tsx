@@ -18,6 +18,7 @@ import { SettingsPage } from './pages/SettingsPage.js';
 import { InventoryPage } from './pages/InventoryPage.js';
 import { ActivityPage } from './pages/ActivityPage.js';
 import { InvoiceReconciliationPage } from './pages/InvoiceReconciliationPage.js';
+import { DepartmentBifurcationPage } from './pages/DepartmentBifurcationPage.js';
 import { AskQuestionPage } from './pages/AskQuestionPage.js';
 import { FloatingAskButton } from './components/common/FloatingAskButton.js';
 import { ErrorBoundary } from './components/common/ErrorBoundary.js';
@@ -368,7 +369,7 @@ export function App() {
         return <InvoiceReconciliationPage selectedMonth={selectedMonth} />;
 
       case 'inventory':
-        return <InventoryPage selectedMonth={selectedMonth} />;
+        return <InventoryPage selectedMonth={selectedMonth} onNavigate={handleNavigate} />;
 
       case 'activity':
         return <ActivityPage />;
@@ -462,6 +463,10 @@ export function App() {
             onSelectCategory={handleCategoryTabSelect}
           />
         );
+
+      case 'departments':
+      case 'bifurcation':
+        return <DepartmentBifurcationPage selectedMonth={selectedMonth} />;
 
       case 'tags':
         return <TagsPage selectedMonth={selectedMonth} />;

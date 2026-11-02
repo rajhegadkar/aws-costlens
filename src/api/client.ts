@@ -17,7 +17,9 @@ import {
   InvoiceReconciliation,
   ResourceInventorySummary,
   CloudTrailActivityItem,
-  DeepDiveCategory
+  DeepDiveCategory,
+  DepartmentBifurcationReport,
+  DepartmentDefinition
 } from '../../shared/types.js';
 
 const API_BASE = '/api';
@@ -260,3 +262,58 @@ export async function fetchDictionary(): Promise<any> {
   if (!res.ok) throw new Error('Failed to fetch glossary dictionary');
   return res.json();
 }
+
+// ==========================================
+// VERSION 2.0: DEPARTMENT BIFURCATION & TCO
+// ==========================================
+
+export async function fetchDepartmentBifurcation(month?: string): Promise<DepartmentBifurcationReport> {
+  const url = month
+    ? `${API_BASE}/cost/departments?month=${encodeURIComponent(month)}`
+    : `${API_BASE}/cost/departments`;
+  const res = await apiFetch(url);
+  if (!res.ok) throw new Error('Failed to fetch department bifurcation report');
+  return res.json();
+}
+
+export async function fetchDepartmentConfig(): Promise<DepartmentDefinition[]> {
+  const res = await apiFetch(`${API_BASE}/cost/departments/config`);
+  if (!res.ok) throw new Error('Failed to fetch department configuration');
+  return res.json();
+}
+
+export async function saveDepartmentConfig(departments: DepartmentDefinition[]): Promise<DepartmentDefinition[]> {
+  const res = await apiFetch(`${API_BASE}/cost/departments/config`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ departments })
+  });
+  if (!res.ok) throw new Error('Failed to save department configuration');
+  const data = await res.json();
+  return data.departments;
+}
+
+export async function assignResourceDepartment(
+  resourceId: string,
+  departmentId: string,
+  description?: string
+): Promise<DepartmentDefinition[]> {
+  const res = await apiFetch(`${API_BASE}/cost/departments/assign`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resourceId, departmentId, description })
+  });
+  if (!res.ok) throw new Error('Failed to assign resource to department');
+  const data = await res.json();
+  return data.departments;
+}
+
+export async function deleteDepartment(departmentId: string): Promise<DepartmentDefinition[]> {
+  const res = await apiFetch(`${API_BASE}/cost/departments/${encodeURIComponent(departmentId)}`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) throw new Error('Failed to delete department');
+  const data = await res.json();
+  return data.departments;
+}
+

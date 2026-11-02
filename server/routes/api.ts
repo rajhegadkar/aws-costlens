@@ -6,6 +6,7 @@ import {
   getAvailableMonths
 } from '../aws/costExplorerService.js';
 import { InventoryService } from '../aws/inventoryService.js';
+import { DepartmentService } from '../aws/departmentService.js';
 import {
   setCurrentProfile,
   getCurrentProfile,
@@ -255,6 +256,143 @@ apiRouter.get('/cost/tags', async (req: Request, res: Response) => {
     const month = (req.query.month as string) || undefined;
     const tags = await CostExplorerService.getTags(month);
     res.json(tags);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// 4B. VERSION 2.0: DEPARTMENT BIFURCATION & TCO
+// ==========================================
+
+apiRouter.get('/cost/departments', async (req: Request, res: Response) => {
+  try {
+    const month = (req.query.month as string) || undefined;
+    const report = await DepartmentService.getDepartmentBifurcationReport(month);
+    res.json(report);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+apiRouter.get('/cost/departments/config', (req: Request, res: Response) => {
+  try {
+    const depts = DepartmentService.getDepartmentDefinitions();
+    res.json(depts);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+apiRouter.post('/cost/departments/config', (req: Request, res: Response) => {
+  try {
+    const { departments, department } = req.body || {};
+    if (Array.isArray(departments)) {
+      DepartmentService.saveDepartmentDefinitions(departments);
+      return res.json({ success: true, departments: DepartmentService.getDepartmentDefinitions() });
+    }
+    if (department && department.id && department.name) {
+      const updated = DepartmentService.addOrUpdateDepartment(department);
+      return res.json({ success: true, departments: updated });
+    }
+    return res.status(400).json({ error: 'Valid departments array or department object is required' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+apiRouter.post('/cost/departments/assign', (req: Request, res: Response) => {
+  try {
+    const { resourceId, departmentId, description } = req.body || {};
+    if (!resourceId) {
+      return res.status(400).json({ error: 'resourceId is required' });
+    }
+    const updated = DepartmentService.assignResourceDepartment(
+      String(resourceId),
+      String(departmentId || 'unallocated'),
+      description ? String(description) : undefined
+    );
+    res.json({ success: true, departments: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+apiRouter.delete('/cost/departments/:deptId', (req: Request, res: Response) => {
+  try {
+    const rawParam = req.params.deptId;
+    const deptId = Array.isArray(rawParam) ? rawParam[0] : (rawParam || '');
+    if (!deptId) return res.status(400).json({ error: 'Department ID is required' });
+    const updated = DepartmentService.deleteDepartment(deptId);
+    res.json({ success: true, departments: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+apiRouter.get('/cost/departments/export', async (req: Request, res: Response) => {
+  try {
+    const month = (req.query.month as string) || undefined;
+    const report = await DepartmentService.getDepartmentBifurcationReport(month);
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="aws-costlens-v2-department-bifurcation-${report.billingPeriod.replace(/[^a-zA-Z0-9-]/g, '_')}.csv"`
+    );
+
+    let csv = `AWS COSTLENS V2.0 - DEPARTMENT BIFURCATION & RECONCILED TCO REPORT\n`;
+    csv += `Billing Period,${escapeCsvCell(report.billingPeriod)}\n`;
+    csv += `Official Amazon Bill Total,$${report.totalOfficialBill.toFixed(2)}\n`;
+    csv += `Total Department Allocated,$${report.totalDepartmentAllocated.toFixed(2)}\n`;
+    csv += `Total Shared Platform & Network,$${report.totalSharedPlatform.toFixed(2)}\n`;
+    csv += `Taxes and Credits,$${report.taxesAndCredits.toFixed(2)}\n`;
+    csv += `Reconciliation Variance,$${report.reconciliationVariance.toFixed(2)} (${report.isReconciled ? '100% RECONCILED' : 'DISCREPANCY'})\n\n`;
+
+    csv += `--- DEPARTMENT SUMMARY ---\n`;
+    csv += `Department,Total Spend ($),% of Bill,Compute ($),Storage ($),Networking ($),Other ($),Resources Count\n`;
+    for (const d of report.departments) {
+      csv += `${escapeCsvCell(d.departmentName)},${d.totalCost.toFixed(2)},${d.percentageOfBill}%,${d.computeCost.toFixed(2)},${d.storageCost.toFixed(2)},${d.networkingCost.toFixed(2)},${d.otherCost.toFixed(2)},${d.resourceCount}\n`;
+    }
+    if (report.unallocatedResources.length > 0) {
+      const unallocTotal = report.unallocatedResources.reduce((acc, r) => acc + r.totalCost, 0);
+      csv += `"Unallocated / Needs Assignment",${unallocTotal.toFixed(2)},${((unallocTotal / (report.totalOfficialBill || 1)) * 100).toFixed(2)}%,-,-,-,-,${report.unallocatedResources.length}\n`;
+    }
+
+    csv += `\n--- ITEMIZED RESOURCE TOTAL COST OF OWNERSHIP (TCO) ---\n`;
+    csv += `Department,Resource Name,Resource ID,Type,State,Region,Compute ($),Storage ($),Networking ($),Other ($),Combined Final Total ($),Monthly Run-Rate ($),Cost Formula,Non-Technical Summary\n`;
+
+    const allResources = [
+      ...report.departments.flatMap(d => d.resources),
+      ...report.unallocatedResources
+    ];
+
+    for (const r of allResources) {
+      csv += [
+        escapeCsvCell(r.departmentName),
+        escapeCsvCell(r.resourceName),
+        escapeCsvCell(r.resourceId),
+        escapeCsvCell(r.resourceType),
+        escapeCsvCell(r.state || 'active'),
+        escapeCsvCell(r.regionName),
+        r.computeCost.toFixed(2),
+        r.storageCost.toFixed(2),
+        r.networkingCost.toFixed(2),
+        r.otherCost.toFixed(2),
+        r.totalCost.toFixed(2),
+        r.monthlyRunRate.toFixed(2),
+        escapeCsvCell(r.costFormula),
+        escapeCsvCell(r.nonTechnicalSummary)
+      ].join(',') + '\n';
+    }
+
+    csv += `\n--- SHARED CLOUD PLATFORM & NETWORK ---\n`;
+    csv += `Service Name,Category,Cost ($),% of Bill,Non-Technical Purpose\n`;
+    for (const s of report.sharedPlatformServices) {
+      csv += `${escapeCsvCell(s.serviceName)},${escapeCsvCell(s.category)},${s.cost.toFixed(2)},${s.percentage.toFixed(2)}%,${escapeCsvCell(s.explanation)}\n`;
+    }
+
+    res.send(csv);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

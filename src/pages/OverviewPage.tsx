@@ -11,6 +11,7 @@ import {
   Lightbulb,
   ArrowRight,
   Sparkles,
+  Building2,
   ShieldCheck
 } from 'lucide-react';
 import {
@@ -83,13 +84,23 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
       </div>
 
       {/* Hero Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-          AWS Spend Overview
-        </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Real-time, plain-English breakdown of your AWS cloud billing.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            AWS Spend Overview
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Real-time, plain-English breakdown of your AWS cloud billing.
+          </p>
+        </div>
+        <button
+          onClick={() => onNavigate('departments')}
+          className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-xs hover:from-orange-600 hover:to-amber-600 transition-all shadow-md shadow-orange-500/20 shrink-0 self-start sm:self-auto"
+        >
+          <Building2 className="w-3.5 h-3.5" />
+          <span>V2 Department Bifurcation & TCO</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       {/* Auto-Generated Dashboard Insights */}

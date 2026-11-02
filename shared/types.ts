@@ -368,3 +368,88 @@ export interface InvoiceReconciliation {
     isCredit?: boolean;
   }[];
 }
+
+// ==========================================
+// VERSION 2.0: DEPARTMENT BIFURCATION & TCO
+// ==========================================
+
+export interface DepartmentAllocationRule {
+  id: string;
+  targetDepartmentId: string;
+  matchType: 'tag' | 'name_prefix' | 'name_contains' | 'resource_id';
+  pattern: string; // e.g. 'Project=customer-portal' or 'backend-' or 'i-0a1b...'
+  priority: number;
+  description?: string;
+}
+
+export interface DepartmentDefinition {
+  id: string;
+  name: string;
+  color: string;
+  description: string;
+  budget?: number;
+  allocationRules: DepartmentAllocationRule[];
+}
+
+export interface ResourceCostItemTCO {
+  resourceId: string;
+  resourceName: string;
+  resourceType: 'EC2' | 'S3' | 'RDS' | 'Shared';
+  departmentId: string;
+  departmentName: string;
+  departmentColor: string;
+  departmentSource: 'tag' | 'rule' | 'heuristic' | 'manual' | 'unallocated';
+  region: string;
+  regionName: string;
+  state?: string;
+  computeCost: number;
+  storageCost: number;
+  networkingCost: number;
+  otherCost: number;
+  totalCost: number;
+  monthlyRunRate: number;
+  costFormula: string;
+  nonTechnicalSummary: string;
+  tags?: Record<string, string>;
+  rawItem?: any;
+}
+
+export interface DepartmentCostSummary {
+  departmentId: string;
+  departmentName: string;
+  color: string;
+  description: string;
+  budget?: number;
+  totalCost: number;
+  percentageOfBill: number;
+  computeCost: number;
+  storageCost: number;
+  networkingCost: number;
+  otherCost: number;
+  resourceCount: number;
+  resources: ResourceCostItemTCO[];
+}
+
+export interface SharedPlatformServiceItem {
+  serviceName: string;
+  category: string;
+  cost: number;
+  percentage: number;
+  explanation: string;
+  nonTechnicalGuide: string;
+}
+
+export interface DepartmentBifurcationReport {
+  billingPeriod: string;
+  totalOfficialBill: number;
+  totalDepartmentAllocated: number;
+  totalSharedPlatform: number;
+  taxesAndCredits: number;
+  reconciliationVariance: number; // Strictly 0.00
+  isReconciled: boolean;
+  departments: DepartmentCostSummary[];
+  unallocatedResources: ResourceCostItemTCO[];
+  sharedPlatformServices: SharedPlatformServiceItem[];
+  availableDepartments: DepartmentDefinition[];
+}
+

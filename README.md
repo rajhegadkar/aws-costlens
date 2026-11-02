@@ -17,6 +17,11 @@ Run it on **any Windows PC, Ubuntu/Linux server, macOS laptop, Docker container,
 
 ## ✨ Key Features
 
+- 🏢 **Version 2.0 — Department Cost Bifurcation & Unified Resource TCO**:
+  - **All-In Resource Costing**: Combines compute runtime, attached EBS SSD storage, dedicated public IPv4 allocations ($0.005/hr), and network egress into a single combined final amount per machine or storage bucket.
+  - **Multi-Tier Department Bifurcation**: Solves missing/incomplete AWS tags by allocating spend to custom organizational departments (Engineering, AI/Data Science, Marketing & Web, IT Operations, Corporate) through tags, custom name-pattern rules, and 1-click interactive reassignment.
+  - **100% Mathematical Reconciliation**: Transparently reconciles department allocations plus dedicated shared network infrastructure (NAT Gateways, Route 53 DNS, KMS, CloudWatch) to match the official Amazon bill down to the cent with \$0.00 variance.
+  - **Built for Non-Technical Stakeholders**: Plain English explanations, calculation formula breakdowns, and one-click CSV export ready for finance controllers and executive presentations.
 - 🏷️ **Per-EC2 & Per-S3 Bucket Current Billing**: Direct billing attribution next to every EC2 server name (MTD spend, 30-day run-rate, On-Demand hourly rate, stopped vs. running cost breakdown) and next to each S3 storage bucket (% of total S3 spend, storage size in GB, storage class, 100% reconciled to the official S3 bill).
 - 💬 **Interactive FinOps Q&A Assistant ("Ask CostLens")**: Ask natural-language questions (*"Why did my bill increase?"*, *"How much is EC2?"*, *"How much am I spending on Claude & Bedrock AI?"*, *"Which region costs the most?"*) and receive verified answers with 1-click drilldowns.
 - ⚡ **5 Category Deep-Dives**: Dedicated component-level breakdowns and optimization guides for **Compute**, **Storage**, **Databases**, **Data Transfer / Networking**, and **AI & Bedrock (`AI & ML`)**.

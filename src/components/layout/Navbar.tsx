@@ -124,11 +124,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               ☁
             </div>
             <div className="hidden sm:block">
-              <span className="font-extrabold text-slate-900 dark:text-white tracking-tight text-sm sm:text-base">
-                AWS Cost<span className="text-orange-500 font-black">Lens</span>
-              </span>
+              <div className="flex items-center space-x-1.5">
+                <span className="font-extrabold text-slate-900 dark:text-white tracking-tight text-sm sm:text-base">
+                  AWS Cost<span className="text-orange-500 font-black">Lens</span>
+                </span>
+                <span className="px-1.5 py-0.2 rounded-md bg-orange-500 text-white font-black text-[9px] uppercase tracking-wider">
+                  v2.0
+                </span>
+              </div>
               <span className="block text-[10px] font-semibold tracking-wider uppercase text-slate-400">
-                FinOps Analytics
+                FinOps Analytics & Allocation
               </span>
             </div>
           </div>
