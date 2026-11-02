@@ -1,7 +1,7 @@
 # ☁️ AWS CostLens — Self-Hosted, 100% Read-Only AWS FinOps Dashboard
 
 [![CI & Read-Only Security Audit](https://github.com/rajhegadkar/aws-costlens/actions/workflows/ci.yml/badge.svg)](https://github.com/rajhegadkar/aws-costlens/actions)
-[![Release](https://img.shields.io/badge/Release-v1.1.0-orange.svg)](https://github.com/rajhegadkar/aws-costlens/releases/tag/v1.1.0)
+[![Release](https://img.shields.io/badge/Release-v2.0.0-orange.svg)](https://github.com/rajhegadkar/aws-costlens/releases/tag/v2.0.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Read-Only Safety](https://img.shields.io/badge/AWS%20API-100%25%20Read--Only%20Enforced-emerald.svg)](#-critical-safety-architecture--100-read-only)
 [![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933.svg)](https://nodejs.org/)
@@ -15,13 +15,40 @@ Run it on **any Windows PC, Ubuntu/Linux server, macOS laptop, Docker container,
 
 ---
 
-## ✨ Key Features
+## 🚀 Version 2.0 Release Highlights
 
-- 🏢 **Version 2.0 — Department Cost Bifurcation & Unified Resource TCO**:
-  - **All-In Resource Costing**: Combines compute runtime, attached EBS SSD storage, dedicated public IPv4 allocations ($0.005/hr), and network egress into a single combined final amount per machine or storage bucket.
-  - **Multi-Tier Department Bifurcation**: Solves missing/incomplete AWS tags by allocating spend to custom organizational departments (Engineering, AI/Data Science, Marketing & Web, IT Operations, Corporate) through tags, custom name-pattern rules, and 1-click interactive reassignment.
-  - **100% Mathematical Reconciliation**: Transparently reconciles department allocations plus dedicated shared network infrastructure (NAT Gateways, Route 53 DNS, KMS, CloudWatch) to match the official Amazon bill down to the cent with \$0.00 variance.
-  - **Built for Non-Technical Stakeholders**: Plain English explanations, calculation formula breakdowns, and one-click CSV export ready for finance controllers and executive presentations.
+AWS CostLens v2.0 introduces **Department Cost Bifurcation**, **Unified Resource Total Cost of Ownership (TCO)**, and **100% Mathematical Reconciliation to the Amazon Bill**:
+
+- 🏢 **Department Cost Bifurcation & Allocation Engine**:
+  - Overcomes missing, informal, or incomplete AWS tags by categorizing cloud spend into custom departments (**Engineering & Backend**, **Data Science & AI**, **Marketing & Web Apps**, **IT Operations & DevOps**, **Corporate & Internal**, or custom departments).
+  - Multi-tier assignment matching: **AWS Cost Allocation Tags** $\rightarrow$ **Custom User Rules** $\rightarrow$ **Automated Workload Heuristics** $\rightarrow$ **Unallocated Review Queue**.
+  - Interactive **1-click department reassignment** directly inside the table that persists rules to disk.
+- 💰 **Unified Resource Total Cost of Ownership (TCO)**:
+  - Replaces fragmented AWS bill line items with an **All-In combined final amount** per machine or storage bucket.
+  - **EC2 Virtual Machines**: Combines compute runtime + attached EBS SSDs + snapshots + dedicated public IPv4 allocation (\$0.005/hr) + outbound internet data transfer.
+  - **S3 Storage Buckets**: Combines storage tiers (Standard, Infrequent Access, Glacier) + API requests (PUT/GET/LIST) + download data transfer egress.
+  - **RDS Databases**: Combines engine compute + allocated SSD storage + automated backup retention + cross-AZ replication.
+  - Interactive formula breakdowns: expanding any resource reveals the exact plain English calculation formula.
+- 🌐 **Dedicated Shared Cloud Platform & Network Category**:
+  - Transparently itemizes account-wide foundational infrastructure (NAT Gateways, Route 53 DNS, CloudWatch monitoring, KMS encryption, Support fees) while keeping individual machine costs pure.
+- ⚖️ **100% Mathematical Bill Reconciliation**:
+  - Proves that $\sum \text{Departments} + \text{Shared Network Platform} + \text{Taxes} = \text{Official Amazon Bill}$ with **\$0.00 variance**.
+- 📊 **Executive & Finance CSV Export**:
+  - One-click export generating finance-ready spreadsheets with resource-level TCO, department summaries, and reconciliation proofs.
+
+---
+
+## 🛠️ Bug Fixes & Platform Hardening in v2.0
+
+- **Universal Mathematical Reconciliation**: Ensured 100% mathematical bill reconciliation across live AWS accounts and offline demo modes with zero floating-point drift.
+- **Windows PowerShell 5.1 & Batch Compatibility**: Replaced problematic multi-byte emoji encodings and delayed-expansion parenthesis blocks in `start.bat` and `start.ps1`, eliminating syntax errors on Windows 10/11.
+- **Working Directory Normalization**: Added robust working directory resolution (`cd /d "%~dp0"`) to prevent execution failures when running launchers as Administrator or from arbitrary working directories.
+- **Sanitized Public Telemetry**: Completely eliminated all internal machine name literals from the public repository, replacing them with generic enterprise architectural patterns.
+- **AST Security Guard Verified**: Static AST audit (`security:audit-mutations`) passes with 0 mutating AWS commands found.
+
+---
+
+## ✨ Full Feature Overview
 - 🏷️ **Per-EC2 & Per-S3 Bucket Current Billing**: Direct billing attribution next to every EC2 server name (MTD spend, 30-day run-rate, On-Demand hourly rate, stopped vs. running cost breakdown) and next to each S3 storage bucket (% of total S3 spend, storage size in GB, storage class, 100% reconciled to the official S3 bill).
 - 💬 **Interactive FinOps Q&A Assistant ("Ask CostLens")**: Ask natural-language questions (*"Why did my bill increase?"*, *"How much is EC2?"*, *"How much am I spending on Claude & Bedrock AI?"*, *"Which region costs the most?"*) and receive verified answers with 1-click drilldowns.
 - ⚡ **5 Category Deep-Dives**: Dedicated component-level breakdowns and optimization guides for **Compute**, **Storage**, **Databases**, **Data Transfer / Networking**, and **AI & Bedrock (`AI & ML`)**.
@@ -298,6 +325,7 @@ aws-costlens/
 │   ├── aws/
 │   │   ├── awsClients.ts           # Modular AWS SDK v3 client factory
 │   │   ├── costExplorerService.ts  # Cost Explorer queries, UTC periods & search
+│   │   ├── departmentService.ts    # Department bifurcation, allocation rules & TCO engine
 │   │   ├── inventoryService.ts     # Multi-region EC2, S3, RDS & CloudTrail scanner
 │   │   └── mockDataService.ts      # Realistic FinOps fallback & demo dataset
 │   ├── cache/
@@ -315,7 +343,7 @@ aws-costlens/
 ├── src/                            # React 18 + Tailwind CSS + Recharts Frontend
 │   ├── api/client.ts               # Authenticated API client
 │   ├── components/                 # Navbar, Sidebar, ExplainModal, ErrorBoundary, etc.
-│   └── pages/                      # 16 FinOps views (Overview, Invoice, Inventory, Q&A...)
+│   └── pages/                      # 17 FinOps views (Department Bifurcation, Overview, Invoice...)
 ├── scripts/
 │   └── audit-mutations.ts          # Automated read-only AWS security verifier
 ├── tests/                          # Vitest test suites (Guard, Auth, Cache, FinOps)
