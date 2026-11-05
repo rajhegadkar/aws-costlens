@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { fetchResourceInventory } from '../api/client.js';
 import { ResourceInventorySummary } from '../../shared/types.js';
+import { useCurrency } from '../context/CurrencyContext.js';
 
 interface InventoryPageProps {
   selectedMonth?: string;
@@ -21,6 +22,7 @@ interface InventoryPageProps {
 }
 
 export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onNavigate }) => {
+  const { formatCurrency, activeConfig } = useCurrency();
   const [inventory, setInventory] = useState<ResourceInventorySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -146,7 +148,7 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                 Total EC2 Fleet Billing
               </div>
               <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                ${(inventory.totalEc2CurrentMonthCost ?? 0).toFixed(2)}
+                {formatCurrency(inventory.totalEc2CurrentMonthCost ?? 0)}
               </div>
               <div className="text-xs text-slate-500 mt-0.5">
                 {inventory.totalEc2Instances} Instances ({inventory.runningEc2Instances} Running • {inventory.stoppedEc2Instances} Stopped)
@@ -166,7 +168,7 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                 {inventory.runningEc2Instances} Active
               </div>
               <div className="text-xs text-emerald-700 dark:text-emerald-400 mt-0.5 font-medium">
-                ~${(inventory.totalEc2EstimatedMonthlyCost ?? 0).toFixed(2)}/mo projected burn
+                ~{formatCurrency(inventory.totalEc2EstimatedMonthlyCost ?? 0)}/mo projected burn
               </div>
             </div>
             <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
@@ -183,7 +185,7 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                 {inventory.stoppedEc2Instances} Machines
               </div>
               <div className="text-xs text-slate-500 mt-0.5">
-                $0/hr compute • EBS disk & prior hours only
+                {formatCurrency(0)}/hr compute • EBS disk & prior hours only
               </div>
             </div>
             <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
@@ -197,10 +199,10 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                 Total S3 Buckets Billing
               </div>
               <div className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-1">
-                ${(inventory.totalS3CurrentMonthCost ?? 0).toFixed(2)}
+                {formatCurrency(inventory.totalS3CurrentMonthCost ?? 0)}
               </div>
               <div className="text-xs text-slate-500 mt-0.5">
-                {inventory.totalS3Buckets} Buckets • ~${(inventory.totalS3EstimatedMonthlyCost ?? 0).toFixed(2)}/mo run-rate
+                {inventory.totalS3Buckets} Buckets • ~{formatCurrency(inventory.totalS3EstimatedMonthlyCost ?? 0)}/mo run-rate
               </div>
             </div>
             <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400">
@@ -221,7 +223,7 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                 : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300'
             }`}
           >
-            EC2 Machines ({inventory?.totalEc2Instances || 0}) • ${(inventory?.totalEc2CurrentMonthCost ?? 0).toFixed(2)}
+            EC2 Machines ({inventory?.totalEc2Instances || 0}) • {formatCurrency(inventory?.totalEc2CurrentMonthCost ?? 0)}
           </button>
           <button
             onClick={() => setActiveTab('s3')}
@@ -231,7 +233,7 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                 : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300'
             }`}
           >
-            S3 Buckets ({inventory?.totalS3Buckets || 0}) • ${(inventory?.totalS3CurrentMonthCost ?? 0).toFixed(2)}
+            S3 Buckets ({inventory?.totalS3Buckets || 0}) • {formatCurrency(inventory?.totalS3CurrentMonthCost ?? 0)}
           </button>
           <button
             onClick={() => setActiveTab('rds')}
@@ -347,7 +349,7 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                               {inst.name}
                             </h3>
                             <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-black bg-orange-50 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300 border border-orange-200/70 dark:border-orange-800/60">
-                              ${currentCost.toFixed(2)}
+                              {formatCurrency(currentCost)}
                             </span>
                           </div>
                           <span className="font-mono text-xs text-slate-400 block truncate mt-0.5">
@@ -378,7 +380,7 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                               Current Billing (MTD)
                             </span>
                             <span className="text-lg font-black text-slate-900 dark:text-white">
-                              ${currentCost.toFixed(2)}
+                              {formatCurrency(currentCost)}
                             </span>
                           </div>
                           <div className="text-right">
@@ -386,7 +388,7 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                               30-Day Run-Rate
                             </span>
                             <span className="text-sm font-extrabold text-slate-700 dark:text-slate-200">
-                              ~${monthlyRunRate.toFixed(2)}/mo
+                              ~{formatCurrency(monthlyRunRate)}/mo
                             </span>
                           </div>
                         </div>
@@ -395,7 +397,7 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                             {inst.costBreakdown || 'Reconciled Compute + EBS/IPv4'}
                           </span>
                           <span className="font-mono font-semibold text-slate-500 dark:text-slate-400 shrink-0 ml-2">
-                            {isRunning ? `$${hourlyRate.toFixed(4)}/hr` : '$0.00/hr'}
+                            {isRunning ? `${formatCurrency(hourlyRate, 4)}/hr` : `${formatCurrency(0)}/hr`}
                           </span>
                         </div>
                       </div>
@@ -459,7 +461,7 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
               <DollarSign className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
               <span>
                 Showing <strong>{filteredS3.length}</strong> S3 buckets reconciled against total Amazon S3 billing (
-                <strong className="text-slate-900 dark:text-white">${totalFilteredS3Cost.toFixed(2)}</strong>)
+                <strong className="text-slate-900 dark:text-white">{formatCurrency(totalFilteredS3Cost)}</strong>)
               </span>
             </div>
             <div className="flex items-center space-x-1.5 text-slate-500 dark:text-slate-400">
@@ -514,13 +516,13 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                                   : 'bg-slate-100 text-slate-600 dark:bg-slate-700/60 dark:text-slate-300'
                               }`}
                             >
-                              ${cost.toFixed(2)}
+                              {formatCurrency(cost)}
                             </span>
                           </div>
                         </td>
                         <td className="py-3.5 px-4 text-right">
                           <div className="font-mono text-xs font-black text-slate-900 dark:text-white">
-                            ${cost.toFixed(2)}
+                            {formatCurrency(cost)}
                           </div>
                           <div className="flex items-center justify-end space-x-1.5 mt-1">
                             <div className="w-16 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -535,7 +537,7 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                           </div>
                         </td>
                         <td className="py-3.5 px-4 text-right font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
-                          ~${runRate.toFixed(2)}/mo
+                          ~{formatCurrency(runRate)}/mo
                         </td>
                         <td className="py-3.5 px-4 text-right font-mono text-xs text-slate-600 dark:text-slate-300">
                           {sizeGb >= 1 ? `${sizeGb.toFixed(1)} GB` : `${Math.max(10, Math.round(sizeGb * 1024))} MB`}
@@ -564,10 +566,10 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                       Total Reconciled S3 Billing ({filteredS3.length} Buckets)
                     </td>
                     <td className="py-3.5 px-4 text-right font-mono text-sm font-black text-purple-600 dark:text-purple-400">
-                      ${totalFilteredS3Cost.toFixed(2)}
+                      {formatCurrency(totalFilteredS3Cost)}
                     </td>
                     <td className="py-3.5 px-4 text-right font-mono text-slate-700 dark:text-slate-300">
-                      ~${filteredS3.reduce((s, b) => s + (b.estimatedMonthlyCost || 0), 0).toFixed(2)}/mo
+                      ~{formatCurrency(filteredS3.reduce((s, b) => s + (b.estimatedMonthlyCost || 0), 0))}/mo
                     </td>
                     <td className="py-3.5 px-4 text-right font-mono text-slate-600 dark:text-slate-300">
                       {filteredS3.reduce((s, b) => s + (b.estimatedSizeGb || 0), 0).toFixed(1)} GB
@@ -631,7 +633,7 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                         {db.region}
                       </td>
                       <td className="py-3.5 px-4 text-right font-mono text-xs font-black text-slate-900 dark:text-white">
-                        ${(db.currentMonthCost ?? 0).toFixed(2)}
+                        {formatCurrency(db.currentMonthCost ?? 0)}
                       </td>
                       <td className="py-3.5 px-4">
                         <span

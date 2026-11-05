@@ -28,28 +28,29 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm 12mm 12mm 12mm;
+    margin: 8mm 10mm;
   }
 
-  /* Force clean white canvas and dark text regardless of dark mode state */
-  *,
-  *::before,
-  *::after {
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
-
-  html,
-  body,
-  #root,
-  div,
-  main,
-  section,
-  article {
-    background: #ffffff !important;
-    color: #0f172a !important;
+  /* Exact background and color fidelity for both Dark and Light modes */
+  * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Clean print canvas sizing */
+  html,
+  body,
+  #root {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Dark mode background preservation in print */
+  html.dark body {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
   }
 
   /* Explicitly hide navigation, floating buttons and controls */
@@ -61,31 +62,52 @@
     display: none !important;
   }
 
-  /* Prevent awkward page-break splits inside tables, rows, and cards */
-  .print-break-inside-avoid,
-  .printable-canvas,
-  table,
+  /* Clean up canvas frame on print */
+  .printable-canvas {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  /* Ensure printed tables use 100% paper width and do not overflow horizontally */
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  table {
+    width: 100% !important;
+  }
+
+  /* Prevent awkward page-break splits inside table rows and small cards */
   tbody tr,
-  thead,
-  tfoot,
-  .rounded-3xl,
-  .rounded-2xl {
+  .print-row-avoid,
+  .print-break-inside-avoid {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
 
-  /* Ensure printed tables use 100% paper width without scrollbars */
-  table {
-    width: 100% !important;
-    table-layout: fixed !important;
+  /* Paper-White print override mode (forces clean white background for ink savings) */
+  .print-as-paper {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
   }
-
-  /* Thin crisp borders for printed documents */
-  .border,
-  .border-b,
-  .border-t,
-  .border-r,
-  .border-l {
+  .print-as-paper * {
     border-color: #cbd5e1 !important;
+  }
+  .print-as-paper [class*="bg-slate-50"],
+  .print-as-paper [class*="bg-slate-100"],
+  .print-as-paper [class*="bg-slate-800"],
+  .print-as-paper [class*="bg-slate-900"] {
+    background-color: #f8fafc !important;
+  }
+  .print-as-paper [class*="text-white"],
+  .print-as-paper [class*="text-slate-900"] {
+    color: #0f172a !important;
+  }
+  .print-as-paper [class*="text-slate-300"],
+  .print-as-paper [class*="text-slate-400"],
+  .print-as-paper [class*="text-slate-500"],
+  .print-as-paper [class*="text-slate-600"] {
+    color: #475569 !important;
   }
 }

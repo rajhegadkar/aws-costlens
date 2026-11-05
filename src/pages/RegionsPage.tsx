@@ -1,12 +1,14 @@
 import React from 'react';
 import { Globe2, MapPin, TrendingUp, TrendingDown, Layers } from 'lucide-react';
 import { RegionCostItem } from '../../shared/types.js';
+import { useCurrency } from '../context/CurrencyContext.js';
 
 interface RegionsPageProps {
   regions: RegionCostItem[];
 }
 
 export const RegionsPage: React.FC<RegionsPageProps> = ({ regions }) => {
+  const { formatCurrency, activeConfig } = useCurrency();
   const topRegion = regions[0];
 
   return (
@@ -16,13 +18,13 @@ export const RegionsPage: React.FC<RegionsPageProps> = ({ regions }) => {
           Regional AWS Spend
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Discover which physical geographic data centers are hosting your services and generating charges.
+          Discover which physical geographic data centers are hosting your services and generating charges in {activeConfig.label}.
         </p>
       </div>
 
       {/* Top Region Banner */}
       {topRegion && (
-        <div className="p-5 rounded-3xl bg-gradient-to-r from-blue-900 to-indigo-950 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-5 rounded-3xl bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-900 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
             <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-sm text-blue-300">
               <Globe2 className="w-8 h-8" />
@@ -35,13 +37,13 @@ export const RegionsPage: React.FC<RegionsPageProps> = ({ regions }) => {
                 {topRegion.regionName} ({topRegion.regionCode})
               </div>
               <div className="text-xs text-blue-200 mt-1">
-                Generates {topRegion.percentOfTotal}% of your entire cloud bill (${topRegion.cost.toFixed(2)} this month)
+                Generates {topRegion.percentOfTotal}% of your entire cloud bill ({formatCurrency(topRegion.cost)} this month)
               </div>
             </div>
           </div>
           <div className="sm:text-right">
             <div className="text-3xl font-black">
-              ${topRegion.cost.toFixed(2)}
+              {formatCurrency(topRegion.cost)}
             </div>
             <div className="text-xs text-blue-300">
               {topRegion.country}
@@ -65,7 +67,7 @@ export const RegionsPage: React.FC<RegionsPageProps> = ({ regions }) => {
                   <span className="text-slate-400 font-mono">({reg.regionCode})</span>
                 </span>
                 <span className="text-slate-900 dark:text-white font-extrabold">
-                  ${reg.cost.toFixed(2)} ({reg.percentOfTotal}%)
+                  {formatCurrency(reg.cost)} ({reg.percentOfTotal}%)
                 </span>
               </div>
               <div className="h-3 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -82,7 +84,7 @@ export const RegionsPage: React.FC<RegionsPageProps> = ({ regions }) => {
       {/* Regional Table */}
       <div className="rounded-3xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-sm min-w-[600px]">
             <thead className="bg-slate-50/70 dark:bg-slate-700/40 border-b border-slate-100 dark:border-slate-700 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               <tr>
                 <th className="py-3.5 px-4">Region Code</th>
@@ -108,10 +110,10 @@ export const RegionsPage: React.FC<RegionsPageProps> = ({ regions }) => {
                     </div>
                   </td>
                   <td className="py-3.5 px-4 text-right font-extrabold text-slate-900 dark:text-white">
-                    ${reg.cost.toFixed(2)}
+                    {formatCurrency(reg.cost)}
                   </td>
                   <td className="py-3.5 px-4 text-right text-slate-500 dark:text-slate-400">
-                    ${reg.previousCost.toFixed(2)}
+                    {formatCurrency(reg.previousCost)}
                   </td>
                   <td className="py-3.5 px-4 text-right font-bold text-slate-800 dark:text-slate-200">
                     {reg.percentOfTotal}%

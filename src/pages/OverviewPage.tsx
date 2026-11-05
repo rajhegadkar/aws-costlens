@@ -30,6 +30,7 @@ import {
   CostTimelinePoint,
   ServiceCostItem
 } from '../../shared/types.js';
+import { useCurrency } from '../context/CurrencyContext.js';
 
 interface OverviewPageProps {
   overview: DashboardOverview;
@@ -48,6 +49,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
   onPeriodChange,
   onNavigate
 }) => {
+  const { formatCurrency, convertAmount, activeConfig } = useCurrency();
   const [explainModal, setExplainModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -59,7 +61,14 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
     title: ''
   });
 
-  const currencySymbol = overview.currency === 'USD' ? '$' : `${overview.currency} `;
+  // Convert timeline data for Recharts based on active currency
+  const convertedTimeline = timeline.map((pt) => ({
+    ...pt,
+    total: convertAmount(pt.total),
+    services: Object.fromEntries(
+      Object.entries(pt.services || {}).map(([sName, sCost]) => [sName, convertAmount(sCost)])
+    )
+  }));
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
@@ -90,7 +99,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
             AWS Spend Overview
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Real-time, plain-English breakdown of your AWS cloud billing.
+            Real-time, plain-English breakdown of your AWS cloud billing ({activeConfig.label}).
           </p>
         </div>
         <button
@@ -114,13 +123,13 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
                 key={ins.id}
                 className={`p-4 rounded-2xl border transition-all flex items-start space-x-3.5 ${
                   isSavings
-                    ? 'bg-emerald-500/5 border-emerald-500/20 dark:bg-emerald-950/20 dark:border-emerald-900/40 text-emerald-950 dark:text-emerald-200'
+                    ? 'bg-emerald-500/5 border-emerald-500/20 dark:bg-emerald-950/30 dark:border-emerald-800/60 text-emerald-950 dark:text-emerald-200'
                     : isWarning
-                    ? 'bg-amber-500/5 border-amber-500/20 dark:bg-amber-950/20 dark:border-amber-900/40 text-amber-950 dark:text-amber-200'
-                    : 'bg-brand-500/5 border-brand-500/20 dark:bg-brand-950/20 dark:border-brand-900/40 text-slate-900 dark:text-slate-200'
+                    ? 'bg-amber-500/5 border-amber-500/20 dark:bg-amber-950/30 dark:border-amber-800/60 text-amber-950 dark:text-amber-200'
+                    : 'bg-brand-500/5 border-brand-500/20 dark:bg-slate-800/90 dark:border-slate-700 text-slate-900 dark:text-slate-200'
                 }`}
               >
-                <div className="mt-0.5 p-2 rounded-xl bg-white dark:bg-slate-800 shadow-sm shrink-0">
+                <div className="mt-0.5 p-2 rounded-xl bg-white dark:bg-slate-800 shadow-sm shrink-0 border border-slate-100 dark:border-slate-700">
                   {isSavings ? (
                     <Sparkles className="w-4 h-4 text-emerald-500" />
                   ) : (
@@ -146,20 +155,20 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
         {/* Card 1: Current Month */}
         <MetricCard
           title="Current Month Spend"
-          value={`${currencySymbol}${overview.currentMonthSpend.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
-          subtitle={`Previous month: ${currencySymbol}${overview.previousMonthSpend.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+          value={formatCurrency(overview.currentMonthSpend)}
+          subtitle={`Previous month: ${formatCurrency(overview.previousMonthSpend)}`}
           changePercent={overview.spendChangePercent}
           changeDirection={overview.spendChangePercent > 0 ? 'up' : 'down'}
           invertChangeColor={true}
-          tooltip="Total unblended amount invoiced for the current month to date"
+          tooltip="Total amount invoiced for the current billing cycle converted to your active currency"
           icon={<DollarSign className="w-5 h-5 text-brand-500" />}
         />
 
         {/* Card 2: Projected Month-End */}
         <MetricCard
           title="Projected Month-End"
-          value={`${currencySymbol}${overview.projectedMonthEnd.toLocaleString('en-US', { minimumFractionDigits: 0 })}`}
-          subtitle={`Expected range: ${currencySymbol}${overview.projectedRange.min.toLocaleString('en-US', { minimumFractionDigits: 0 })} – ${currencySymbol}${overview.projectedRange.max.toLocaleString('en-US', { minimumFractionDigits: 0 })}`}
+          value={formatCurrency(overview.projectedMonthEnd, 0)}
+          subtitle={`Expected range: ${formatCurrency(overview.projectedRange.min, 0)} – ${formatCurrency(overview.projectedRange.max, 0)}`}
           badgeText="Estimate"
           badgeColor="amber"
           tooltip="Estimated month-end bill based on your daily run-rate and historical spending patterns"
@@ -169,9 +178,9 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
         {/* Card 3: Average Daily Spend */}
         <MetricCard
           title="Average Daily Spend"
-          value={`${currencySymbol}${overview.avgDailySpend.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
-          subtitle={`Today's estimated run-rate: ${currencySymbol}${overview.todayEstimated.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
-          tooltip="Average dollars spent per day in the current billing period"
+          value={formatCurrency(overview.avgDailySpend)}
+          subtitle={`Today's estimated run-rate: ${formatCurrency(overview.todayEstimated)}`}
+          tooltip="Average spend per day in the current billing period"
           icon={<Calendar className="w-5 h-5 text-indigo-500" />}
         />
 
@@ -182,7 +191,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
         >
           <MetricCard
             title="Highest Cost Service"
-            value={`${currencySymbol}${overview.topService.amount.toLocaleString('en-US', { minimumFractionDigits: 0 })}`}
+            value={formatCurrency(overview.topService.amount, 0)}
             subtitle={`${overview.topService.name.split(' - ')[0]} (${overview.topService.percentage}% of total)`}
             badgeText="Top Driver"
             badgeColor="rose"
@@ -197,7 +206,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
         {/* Top Region */}
         <div
           onClick={() => onNavigate('regions')}
-          className="p-5 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-sm cursor-pointer hover:border-brand-500 transition-all flex items-center justify-between"
+          className="p-5 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 shadow-sm cursor-pointer hover:border-brand-500 dark:hover:border-slate-600 transition-all flex items-center justify-between"
         >
           <div>
             <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -207,7 +216,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
               {overview.topRegion.name}
             </div>
             <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {currencySymbol}{overview.topRegion.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ({overview.topRegion.percentage}% of total)
+              {formatCurrency(overview.topRegion.amount)} ({overview.topRegion.percentage}% of total)
             </div>
           </div>
           <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
@@ -218,7 +227,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
         {/* Active Services Generating Charges */}
         <div
           onClick={() => onNavigate('services')}
-          className="p-5 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-sm cursor-pointer hover:border-brand-500 transition-all flex items-center justify-between"
+          className="p-5 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 shadow-sm cursor-pointer hover:border-brand-500 dark:hover:border-slate-600 transition-all flex items-center justify-between"
         >
           <div>
             <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -243,7 +252,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
               isOpen: true,
               title: 'Total AWS Bill Explanation',
               amount: overview.currentMonthSpend,
-              customExplanation: `Your current monthly spend of $${overview.currentMonthSpend.toFixed(2)} spans ${overview.activeServicesCount} active AWS services. Your largest cost driver is ${overview.topService.name} ($${overview.topService.amount.toFixed(2)}, ${overview.topService.percentage}% of total spend), and your highest-spend region is ${overview.topRegion.name} ($${overview.topRegion.amount.toFixed(2)}, ${overview.topRegion.percentage}% of total spend).`
+              customExplanation: `Your current monthly spend of ${formatCurrency(overview.currentMonthSpend)} spans ${overview.activeServicesCount} active AWS services. Your largest cost driver is ${overview.topService.name} (${formatCurrency(overview.topService.amount)}, ${overview.topService.percentage}% of total spend), and your highest-spend region is ${overview.topRegion.name} (${formatCurrency(overview.topRegion.amount)}, ${overview.topRegion.percentage}% of total spend).`
             })
           }
           className="p-5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-sm cursor-pointer hover:opacity-95 transition-all flex items-center justify-between"
@@ -266,7 +275,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
       </div>
 
       {/* FinOps Q&A Quick Access Helper Card */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-white dark:to-slate-800/80 border border-orange-200/80 dark:border-orange-900/40 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-orange-500/5 dark:from-orange-950/40 dark:via-amber-950/30 dark:to-slate-800/90 border border-orange-200/80 dark:border-orange-900/50 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center space-x-3">
           <div className="p-2.5 rounded-2xl bg-orange-500 text-white shadow-md shadow-orange-500/20 shrink-0">
             <Sparkles className="w-5 h-5 animate-pulse" />
@@ -298,7 +307,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
               Spending Timeline & Trends
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Hover over any point to inspect service breakdowns.
+              Hover over any point to inspect service breakdowns in {activeConfig.label}.
             </p>
           </div>
 
@@ -323,18 +332,14 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
         {/* Recharts Area Chart */}
         <div className="h-72 w-full pt-4">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={timeline} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <AreaChart data={convertedTimeline} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
                   <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
                 </linearGradient>
-                <linearGradient id="colorEc2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#f97316" stopOpacity={0.0} />
-                </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.4} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.25} />
               <XAxis
                 dataKey="date"
                 stroke="#94a3b8"
@@ -352,26 +357,26 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
                 stroke="#94a3b8"
                 fontSize={11}
                 tickLine={false}
-                tickFormatter={(val) => `$${val}`}
+                tickFormatter={(val) => `${activeConfig.symbol}${val}`}
               />
               <Tooltip
                 content={({ active, payload, label }) => {
                   if (!active || !payload || !payload.length) return null;
-                  const data = payload[0].payload as CostTimelinePoint;
+                  const data = payload[0].payload as any;
                   return (
-                    <div className="bg-slate-900 text-white p-3.5 rounded-2xl shadow-2xl border border-slate-700 text-xs min-w-[200px]">
-                      <div className="font-bold text-slate-300 border-b border-slate-800 pb-1.5 mb-2">
+                    <div className="bg-slate-900 dark:bg-slate-850 text-white p-3.5 rounded-2xl shadow-2xl border border-slate-700 text-xs min-w-[200px]">
+                      <div className="font-bold text-slate-300 border-b border-slate-750 pb-1.5 mb-2">
                         {label}
                       </div>
                       <div className="flex justify-between font-extrabold text-sm text-brand-400 mb-2">
-                        <span>Total Cost:</span>
-                        <span>${data.total.toFixed(2)}</span>
+                        <span>Total Spend:</span>
+                        <span>{activeConfig.symbol}{Number(data.total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                       <div className="space-y-1 text-slate-400">
-                        {Object.entries(data.services || {}).map(([sName, sCost]) => (
+                        {Object.entries(data.services || {}).map(([sName, sCost]: [string, any]) => (
                           <div key={sName} className="flex justify-between">
                             <span className="truncate max-w-[120px]">{sName}:</span>
-                            <span className="text-white font-medium">${sCost.toFixed(2)}</span>
+                            <span className="text-white font-medium">{activeConfig.symbol}{Number(sCost).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                           </div>
                         ))}
                       </div>
@@ -382,7 +387,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
               <Area
                 type="monotone"
                 dataKey="total"
-                stroke="#3b82f6"
+                stroke="#38bdf8"
                 strokeWidth={3}
                 fillOpacity={1}
                 fill="url(#colorTotal)"
@@ -401,7 +406,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
               Top Cost Contributors
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Services generating the majority of your bill this month.
+              Services generating the majority of your bill this month in {activeConfig.label}.
             </p>
           </div>
           <button
@@ -414,7 +419,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-sm min-w-[600px]">
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-700 text-xs font-bold uppercase tracking-wider text-slate-400">
                 <th className="py-3 px-3">Service</th>
@@ -448,7 +453,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
                       </span>
                     </td>
                     <td className="py-3.5 px-3 text-right font-extrabold text-slate-900 dark:text-white">
-                      ${s.currentMonth.toFixed(2)}
+                      {formatCurrency(s.currentMonth)}
                     </td>
                     <td className="py-3.5 px-3 text-right">
                       <span
@@ -458,7 +463,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
                             : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40'
                         }`}
                       >
-                        {isPositive ? `+$${s.changeAmount.toFixed(2)}` : `-$${Math.abs(s.changeAmount).toFixed(2)}`}
+                        {isPositive ? `+${formatCurrency(s.changeAmount)}` : `-${formatCurrency(Math.abs(s.changeAmount))}`}
                       </span>
                     </td>
                     <td className="py-3.5 px-3 text-right font-bold text-slate-700 dark:text-slate-300">

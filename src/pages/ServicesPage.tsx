@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { ServiceCostItem } from '../../shared/types.js';
 import { ExplainModal } from '../components/common/ExplainModal.js';
+import { useCurrency } from '../context/CurrencyContext.js';
 
 interface ServicesPageProps {
   services: ServiceCostItem[];
@@ -21,6 +22,7 @@ interface ServicesPageProps {
 type SortField = 'currentMonth' | 'previousMonth' | 'changeAmount' | 'changePercent' | 'percentOfTotal' | 'serviceName';
 
 export const ServicesPage: React.FC<ServicesPageProps> = ({ services, onSelectService }) => {
+  const { formatCurrency, activeConfig } = useCurrency();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [sortField, setSortField] = useState<SortField>('currentMonth');
@@ -150,7 +152,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ services, onSelectSe
                   className="py-3.5 px-3 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
                 >
                   <div className="flex items-center justify-end space-x-1.5">
-                    <span>Change ($)</span>
+                    <span>Change ({activeConfig.symbol})</span>
                     <ArrowUpDown className="w-3.5 h-3.5 opacity-60" />
                   </div>
                 </th>
@@ -199,10 +201,10 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ services, onSelectSe
                       </span>
                     </td>
                     <td className="py-4 px-3 text-right font-black text-slate-900 dark:text-white">
-                      ${s.currentMonth.toFixed(2)}
+                      {formatCurrency(s.currentMonth)}
                     </td>
                     <td className="py-4 px-3 text-right text-slate-500 dark:text-slate-400">
-                      ${s.previousMonth.toFixed(2)}
+                      {formatCurrency(s.previousMonth)}
                     </td>
                     <td className="py-4 px-3 text-right">
                       <span
@@ -212,7 +214,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ services, onSelectSe
                             : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40'
                         }`}
                       >
-                        {isIncrease ? `+$${s.changeAmount.toFixed(2)}` : `-$${Math.abs(s.changeAmount).toFixed(2)}`}
+                        {isIncrease ? `+${formatCurrency(s.changeAmount)}` : `-${formatCurrency(Math.abs(s.changeAmount))}`}
                       </span>
                     </td>
                     <td className="py-4 px-3 text-right">

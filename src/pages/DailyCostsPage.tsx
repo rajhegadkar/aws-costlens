@@ -2,7 +2,6 @@ import React from 'react';
 import {
   CalendarDays,
   TrendingUp,
-  TrendingDown,
   Clock,
   ArrowUpRight,
   ArrowDownRight,
@@ -19,12 +18,20 @@ import {
 } from 'recharts';
 import { DailyCostSummary } from '../../shared/types.js';
 import { MetricCard } from '../components/common/MetricCard.js';
+import { useCurrency } from '../context/CurrencyContext.js';
 
 interface DailyCostsPageProps {
   dailySummary: DailyCostSummary;
 }
 
 export const DailyCostsPage: React.FC<DailyCostsPageProps> = ({ dailySummary }) => {
+  const { formatCurrency, convertAmount, activeConfig } = useCurrency();
+
+  const convertedPoints = (dailySummary.dailyPoints || []).map((pt) => ({
+    ...pt,
+    amount: convertAmount(pt.amount)
+  }));
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       <div>
@@ -32,7 +39,7 @@ export const DailyCostsPage: React.FC<DailyCostsPageProps> = ({ dailySummary }) 
           Daily Spending & Burn Rate
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Track day-by-day AWS charges and identify high-spending weekdays versus weekends.
+          Track day-by-day AWS charges and identify high-spending weekdays versus weekends in {activeConfig.label}.
         </p>
       </div>
 
@@ -40,25 +47,25 @@ export const DailyCostsPage: React.FC<DailyCostsPageProps> = ({ dailySummary }) 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Today's Estimated Spend"
-          value={`$${dailySummary.todayCost.toFixed(2)}`}
+          value={formatCurrency(dailySummary.todayCost)}
           subtitle="Estimated run-rate for today"
           icon={<DollarSign className="w-5 h-5 text-brand-500" />}
         />
         <MetricCard
           title="Yesterday's Total"
-          value={`$${dailySummary.yesterdayCost.toFixed(2)}`}
+          value={formatCurrency(dailySummary.yesterdayCost)}
           subtitle="Finalized billed cost for yesterday"
           icon={<Clock className="w-5 h-5 text-indigo-500" />}
         />
         <MetricCard
           title="7-Day Moving Average"
-          value={`$${dailySummary.sevenDayAverage.toFixed(2)}`}
+          value={formatCurrency(dailySummary.sevenDayAverage)}
           subtitle="Average daily spend over the past week"
           icon={<TrendingUp className="w-5 h-5 text-amber-500" />}
         />
         <MetricCard
           title="30-Day Moving Average"
-          value={`$${dailySummary.thirtyDayAverage.toFixed(2)}`}
+          value={formatCurrency(dailySummary.thirtyDayAverage)}
           subtitle="Long-term daily baseline"
           icon={<CalendarDays className="w-5 h-5 text-purple-500" />}
         />
@@ -72,7 +79,7 @@ export const DailyCostsPage: React.FC<DailyCostsPageProps> = ({ dailySummary }) 
               Highest Spending Day (Last 30 Days)
             </div>
             <div className="text-xl font-black text-rose-950 dark:text-rose-200 mt-0.5">
-              ${dailySummary.highestDay.amount.toFixed(2)}
+              {formatCurrency(dailySummary.highestDay.amount)}
             </div>
             <div className="text-xs text-rose-700/80 dark:text-rose-400">
               Occurred on: {dailySummary.highestDay.date}
@@ -89,7 +96,7 @@ export const DailyCostsPage: React.FC<DailyCostsPageProps> = ({ dailySummary }) 
               Lowest Spending Day (Last 30 Days)
             </div>
             <div className="text-xl font-black text-emerald-950 dark:text-emerald-200 mt-0.5">
-              ${dailySummary.lowestDay.amount.toFixed(2)}
+              {formatCurrency(dailySummary.lowestDay.amount)}
             </div>
             <div className="text-xs text-emerald-700/80 dark:text-emerald-400">
               Occurred on: {dailySummary.lowestDay.date}
@@ -114,8 +121,8 @@ export const DailyCostsPage: React.FC<DailyCostsPageProps> = ({ dailySummary }) 
 
         <div className="h-80 w-full pt-4">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={dailySummary.dailyPoints} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.4} />
+            <BarChart data={convertedPoints} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.25} />
               <XAxis
                 dataKey="date"
                 stroke="#94a3b8"
@@ -130,7 +137,7 @@ export const DailyCostsPage: React.FC<DailyCostsPageProps> = ({ dailySummary }) 
                 stroke="#94a3b8"
                 fontSize={11}
                 tickLine={false}
-                tickFormatter={(val) => `$${val}`}
+                tickFormatter={(val) => `${activeConfig.symbol}${val}`}
               />
               <Tooltip
                 content={({ active, payload, label }) => {
@@ -143,7 +150,7 @@ export const DailyCostsPage: React.FC<DailyCostsPageProps> = ({ dailySummary }) 
                         <span className="text-brand-400">{item.dayOfWeek}</span>
                       </div>
                       <div className="text-base font-black text-white">
-                        ${item.amount.toFixed(2)}
+                        {activeConfig.symbol}{Number(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                       {item.isToday && (
                         <span className="mt-1 inline-block text-[10px] text-amber-400 font-bold uppercase">
@@ -156,7 +163,7 @@ export const DailyCostsPage: React.FC<DailyCostsPageProps> = ({ dailySummary }) 
               />
               <Bar
                 dataKey="amount"
-                fill="#3b82f6"
+                fill="#38bdf8"
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>

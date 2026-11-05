@@ -13,12 +13,14 @@ import {
 import { fetchDrillDown } from '../api/client.js';
 import { DrillDownNode } from '../../shared/types.js';
 import { ExplainModal } from '../components/common/ExplainModal.js';
+import { useCurrency } from '../context/CurrencyContext.js';
 
 interface DrillDownPageProps {
   selectedMonth?: string;
 }
 
 export const DrillDownPage: React.FC<DrillDownPageProps> = ({ selectedMonth }) => {
+  const { formatCurrency } = useCurrency();
   const [tree, setTree] = useState<DrillDownNode | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set(['root-total', 'cat-compute']));
@@ -90,7 +92,7 @@ export const DrillDownPage: React.FC<DrillDownPageProps> = ({ selectedMonth }) =
 
           <div className="flex items-center space-x-3 shrink-0 ml-2">
             <span className="text-sm font-extrabold text-slate-900 dark:text-white">
-              ${node.cost.toFixed(2)}
+              {formatCurrency(node.cost)}
             </span>
             <span className="text-xs text-slate-400 font-medium">
               ({node.percentOfParent}% of parent)
@@ -161,7 +163,7 @@ export const DrillDownPage: React.FC<DrillDownPageProps> = ({ selectedMonth }) =
                 <div className="flex justify-between items-baseline">
                   <span className="text-xs text-slate-500 dark:text-slate-400">Total Billed:</span>
                   <span className="text-2xl font-black text-slate-900 dark:text-white">
-                    ${selectedNode.cost.toFixed(2)}
+                    {formatCurrency(selectedNode.cost)}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">

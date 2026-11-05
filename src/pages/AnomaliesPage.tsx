@@ -11,6 +11,7 @@ import {
 import { fetchAnomalies, fetchSavings, sendTestWebhookAlert } from '../api/client.js';
 import { CostAnomaly, CostSavings } from '../../shared/types.js';
 import { Bell, CheckCircle2 } from 'lucide-react';
+import { useCurrency } from '../context/CurrencyContext.js';
 
 interface AnomaliesPageProps {
   onSelectService: (serviceName: string) => void;
@@ -18,6 +19,7 @@ interface AnomaliesPageProps {
 }
 
 export const AnomaliesPage: React.FC<AnomaliesPageProps> = ({ onSelectService, selectedMonth }) => {
+  const { formatCurrency } = useCurrency();
   const [anomalies, setAnomalies] = useState<CostAnomaly[]>([]);
   const [savings, setSavings] = useState<CostSavings[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,8 +137,8 @@ export const AnomaliesPage: React.FC<AnomaliesPageProps> = ({ onSelectService, s
                 <div>
                   <div className="text-xs text-slate-400">Day's Spend:</div>
                   <div className="text-base font-black text-rose-600 dark:text-rose-400">
-                    ${anom.currentCost.toFixed(2)}{' '}
-                    <span className="text-xs font-normal text-slate-400">(avg: ${anom.expectedCost.toFixed(2)})</span>
+                    {formatCurrency(anom.currentCost)}{' '}
+                    <span className="text-xs font-normal text-slate-400">(avg: {formatCurrency(anom.expectedCost)})</span>
                   </div>
                 </div>
 
@@ -173,7 +175,7 @@ export const AnomaliesPage: React.FC<AnomaliesPageProps> = ({ onSelectService, s
                   ↓ {sav.savedPercent.toFixed(1)}% Saved
                 </span>
                 <span className="text-xs font-black text-emerald-700 dark:text-emerald-400">
-                  -${sav.savedAmount.toFixed(2)} / mo
+                  -{formatCurrency(sav.savedAmount)} / mo
                 </span>
               </div>
 
@@ -186,7 +188,7 @@ export const AnomaliesPage: React.FC<AnomaliesPageProps> = ({ onSelectService, s
               </p>
 
               <div className="pt-2 text-[11px] text-slate-400">
-                Last month: ${sav.previousCost.toFixed(2)} → This month: ${sav.currentCost.toFixed(2)}
+                Last month: {formatCurrency(sav.previousCost)} → This month: {formatCurrency(sav.currentCost)}
               </div>
             </div>
           ))}

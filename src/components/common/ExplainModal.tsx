@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { X, HelpCircle, DollarSign, Lightbulb, Shield, Layers } from 'lucide-react';
 import { explainService } from '../../../shared/explanationDictionary.js';
+import { useCurrency } from '../../context/CurrencyContext.js';
 
 interface ExplainModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export const ExplainModal: React.FC<ExplainModalProps> = ({
   customExplanation,
   subcategories
 }) => {
+  const { formatCurrency } = useCurrency();
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -81,7 +83,7 @@ export const ExplainModal: React.FC<ExplainModalProps> = ({
                   Total Monthly Charge
                 </span>
                 <div className="text-2xl font-black text-slate-900 dark:text-white">
-                  ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
+                  {formatCurrency(amount)}
                 </div>
               </div>
               <div className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center space-x-1.5">
@@ -137,7 +139,7 @@ export const ExplainModal: React.FC<ExplainModalProps> = ({
                     </div>
                     <div className="sm:text-right shrink-0">
                       <div className="text-sm font-bold text-slate-900 dark:text-white">
-                        ${sub.cost.toFixed(2)}
+                        {formatCurrency(sub.cost)}
                       </div>
                       <div className="text-xs text-slate-500 dark:text-slate-400">
                         {sub.percent}% of service

@@ -15,6 +15,7 @@ import { fetchServiceDetail } from '../api/client.js';
 import { ServiceDetailBreakdown } from '../../shared/types.js';
 import { MetricCard } from '../components/common/MetricCard.js';
 import { ExplainModal } from '../components/common/ExplainModal.js';
+import { useCurrency } from '../context/CurrencyContext.js';
 
 interface ServiceDetailPageProps {
   serviceName: string;
@@ -27,6 +28,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
   selectedMonth,
   onBack
 }) => {
+  const { formatCurrency, activeConfig } = useCurrency();
   const [detail, setDetail] = useState<ServiceDetailBreakdown | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'subcategories' | 'usageTypes' | 'operations' | 'regions'>('subcategories');
@@ -65,17 +67,18 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Back button & Title */}
+      {/* Top Navigation */}
       <div className="flex items-center space-x-3">
         <button
           onClick={onBack}
-          className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
+          title="Back to services"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">
-            Service Detail Analysis
+            Service Deep-Dive ({activeConfig.label})
           </div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white">
             {detail.serviceName}
@@ -87,8 +90,8 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
           title="Current Month Spend"
-          value={`$${detail.totalCost.toFixed(2)}`}
-          subtitle={`Previous month: $${detail.previousMonthCost.toFixed(2)}`}
+          value={formatCurrency(detail.totalCost)}
+          subtitle={`Previous month: ${formatCurrency(detail.previousMonthCost)}`}
           changePercent={detail.changePercent}
           changeDirection={detail.changePercent > 0 ? 'up' : 'down'}
           icon={<DollarSign className="w-5 h-5 text-brand-500" />}
@@ -193,7 +196,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-base font-extrabold text-slate-900 dark:text-white">
-                    ${sub.cost.toFixed(2)}
+                    {formatCurrency(sub.cost)}
                   </div>
                 </div>
               </div>
@@ -204,7 +207,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
         {/* Tab 2: Usage Types */}
         {activeTab === 'usageTypes' && (
           <div className="overflow-x-auto pt-2">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm min-w-[550px]">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-700 text-xs font-bold uppercase tracking-wider text-slate-400">
                   <th className="py-2.5 px-3">Usage Type</th>
@@ -223,7 +226,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
                       {u.explanation}
                     </td>
                     <td className="py-3 px-3 text-right font-bold text-slate-900 dark:text-white">
-                      ${u.cost.toFixed(2)}
+                      {formatCurrency(u.cost)}
                     </td>
                     <td className="py-3 px-3 text-right font-medium text-slate-600 dark:text-slate-300">
                       {u.percent}%
@@ -238,7 +241,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
         {/* Tab 3: Operations */}
         {activeTab === 'operations' && (
           <div className="overflow-x-auto pt-2">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm min-w-[550px]">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-700 text-xs font-bold uppercase tracking-wider text-slate-400">
                   <th className="py-2.5 px-3">AWS Operation</th>
@@ -257,7 +260,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
                       {op.explanation}
                     </td>
                     <td className="py-3 px-3 text-right font-bold text-slate-900 dark:text-white">
-                      ${op.cost.toFixed(2)}
+                      {formatCurrency(op.cost)}
                     </td>
                     <td className="py-3 px-3 text-right font-medium text-slate-600 dark:text-slate-300">
                       {op.percent}%
@@ -287,7 +290,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
                 </div>
                 <div className="text-right">
                   <div className="text-base font-extrabold text-slate-900 dark:text-white">
-                    ${reg.cost.toFixed(2)}
+                    {formatCurrency(reg.cost)}
                   </div>
                   <div className="text-xs text-slate-500">
                     {reg.percent}% of service

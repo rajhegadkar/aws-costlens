@@ -36,6 +36,7 @@ import {
   ResourceCostItemTCO,
   DepartmentCostSummary
 } from '../../shared/types.js';
+import { useCurrency } from '../context/CurrencyContext.js';
 
 interface DepartmentBifurcationPageProps {
   selectedMonth?: string;
@@ -52,6 +53,7 @@ const COLOR_CLASSES: Record<string, { bg: string; text: string; border: string; 
 };
 
 export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps> = ({ selectedMonth }) => {
+  const { formatCurrency, activeConfig } = useCurrency();
   const [report, setReport] = useState<DepartmentBifurcationReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -256,7 +258,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                   100% Mathematical Bill Reconciliation Verified
                 </span>
                 <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 font-extrabold text-[10px]">
-                  Variance: ${report.reconciliationVariance.toFixed(2)}
+                  Variance: {formatCurrency(report.reconciliationVariance)}
                 </span>
               </div>
               <p className="text-xs text-emerald-900/80 dark:text-emerald-200/80 mt-1 max-w-2xl leading-relaxed">
@@ -269,21 +271,21 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
             <div>
               <span className="text-slate-400 block text-[10px] font-semibold uppercase">Amazon Bill Total</span>
               <span className="text-base font-black text-slate-900 dark:text-white">
-                ${report.totalOfficialBill.toFixed(2)}
+                {formatCurrency(report.totalOfficialBill)}
               </span>
             </div>
             <span className="text-slate-300 dark:text-slate-600 font-black">=</span>
             <div>
               <span className="text-slate-400 block text-[10px] font-semibold uppercase">Departments</span>
               <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                ${report.totalDepartmentAllocated.toFixed(2)}
+                {formatCurrency(report.totalDepartmentAllocated)}
               </span>
             </div>
             <span className="text-slate-300 dark:text-slate-600 font-black">+</span>
             <div>
               <span className="text-slate-400 block text-[10px] font-semibold uppercase">Shared Platform</span>
               <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
-                ${report.totalSharedPlatform.toFixed(2)}
+                {formatCurrency(report.totalSharedPlatform)}
               </span>
             </div>
             {report.taxesAndCredits !== 0 && (
@@ -292,7 +294,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                 <div>
                   <span className="text-slate-400 block text-[10px] font-semibold uppercase">Tax & Credits</span>
                   <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
-                    ${report.taxesAndCredits.toFixed(2)}
+                    {formatCurrency(report.taxesAndCredits)}
                   </span>
                 </div>
               </>
@@ -338,11 +340,11 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60">
                 <div className="flex items-baseline justify-between">
                   <div className="text-lg font-black text-slate-900 dark:text-white">
-                    ${dept.totalCost.toFixed(2)}
+                    {formatCurrency(dept.totalCost)}
                   </div>
                   {dept.budget && (
                     <span className="text-[11px] font-semibold text-slate-400">
-                      / ${dept.budget.toFixed(0)} limit
+                      / {formatCurrency(dept.budget, 0)} limit
                     </span>
                   )}
                 </div>
@@ -381,7 +383,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                 <div className="text-[10px] text-slate-400 flex items-center justify-between mt-2 pt-1 border-t border-slate-100 dark:border-slate-700/40">
                   <span>{dept.resourceCount} resources</span>
                   <span className="font-semibold text-slate-600 dark:text-slate-300">
-                    C:${dept.computeCost.toFixed(0)} • S:${dept.storageCost.toFixed(0)} • N:${dept.networkingCost.toFixed(0)}
+                    C:{formatCurrency(dept.computeCost, 0)} • S:{formatCurrency(dept.storageCost, 0)} • N:{formatCurrency(dept.networkingCost, 0)}
                   </span>
                 </div>
               </div>
@@ -418,7 +420,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
 
             <div className="mt-4 pt-3 border-t border-rose-100 dark:border-rose-900/40">
               <div className="text-lg font-black text-rose-700 dark:text-rose-300">
-                ${report.unallocatedResources.reduce((acc, r) => acc + r.totalCost, 0).toFixed(2)}
+                {formatCurrency(report.unallocatedResources.reduce((acc, r) => acc + r.totalCost, 0))}
               </div>
               <div className="text-[10px] text-rose-600 font-semibold mt-0.5">
                 {report.unallocatedResources.length} unassigned items
@@ -498,7 +500,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
             </p>
           </div>
           <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            Filtered Total: <strong className="text-slate-900 dark:text-white">${filteredResources.reduce((acc, r) => acc + r.totalCost, 0).toFixed(2)}</strong>
+            Filtered Total: <strong className="text-slate-900 dark:text-white">{formatCurrency(filteredResources.reduce((acc, r) => acc + r.totalCost, 0))}</strong>
           </div>
         </div>
 
@@ -509,10 +511,10 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                 <th className="py-3 px-4">Resource & Machine Name</th>
                 <th className="py-3 px-4">Assigned Department</th>
                 <th className="py-3 px-3">Type</th>
-                <th className="py-3 px-3 text-right">Compute ($)</th>
-                <th className="py-3 px-3 text-right">Storage ($)</th>
-                <th className="py-3 px-3 text-right">Network & IP ($)</th>
-                <th className="py-3 px-3 text-right">Other ($)</th>
+                <th className="py-3 px-3 text-right">Compute ({activeConfig.symbol})</th>
+                <th className="py-3 px-3 text-right">Storage ({activeConfig.symbol})</th>
+                <th className="py-3 px-3 text-right">Network & IP ({activeConfig.symbol})</th>
+                <th className="py-3 px-3 text-right">Other ({activeConfig.symbol})</th>
                 <th className="py-3 px-4 text-right">Combined Total</th>
                 <th className="py-3 px-3 text-center">Breakdown</th>
               </tr>
@@ -589,27 +591,27 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                       </td>
 
                       <td className="py-3.5 px-3 text-right font-medium text-slate-700 dark:text-slate-200">
-                        ${res.computeCost.toFixed(2)}
+                        {formatCurrency(res.computeCost)}
                       </td>
 
                       <td className="py-3.5 px-3 text-right font-medium text-slate-700 dark:text-slate-200">
-                        ${res.storageCost.toFixed(2)}
+                        {formatCurrency(res.storageCost)}
                       </td>
 
                       <td className="py-3.5 px-3 text-right font-medium text-slate-700 dark:text-slate-200">
-                        ${res.networkingCost.toFixed(2)}
+                        {formatCurrency(res.networkingCost)}
                       </td>
 
                       <td className="py-3.5 px-3 text-right font-medium text-slate-700 dark:text-slate-200">
-                        ${res.otherCost.toFixed(2)}
+                        {formatCurrency(res.otherCost)}
                       </td>
 
                       <td className="py-3.5 px-4 text-right">
                         <div className="text-sm font-black text-slate-900 dark:text-white">
-                          ${res.totalCost.toFixed(2)}
+                          {formatCurrency(res.totalCost)}
                         </div>
                         <div className="text-[10px] text-slate-400">
-                          ~${res.monthlyRunRate.toFixed(2)}/mo
+                          ~{formatCurrency(res.monthlyRunRate)}/mo
                         </div>
                       </td>
 
@@ -696,7 +698,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                   Shared Cloud Platform & Network Infrastructure
                 </h3>
                 <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold text-[10px]">
-                  ${report.totalSharedPlatform.toFixed(2)} Total
+                  {formatCurrency(report.totalSharedPlatform)} Total
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -725,7 +727,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                       {svc.serviceName}
                     </span>
                     <span className="text-xs font-black text-amber-600 dark:text-amber-400">
-                      ${svc.cost.toFixed(2)}
+                      {formatCurrency(svc.cost)}
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">

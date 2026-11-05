@@ -14,6 +14,7 @@ import {
 import { fetchCategory } from '../api/client.js';
 import { CategoryBreakdown, DeepDiveCategory } from '../../shared/types.js';
 import { MetricCard } from '../components/common/MetricCard.js';
+import { useCurrency } from '../context/CurrencyContext.js';
 
 interface CategoriesPageProps {
   initialCategory?: DeepDiveCategory;
@@ -26,6 +27,7 @@ export const CategoriesPage: React.FC<CategoriesPageProps> = ({
   selectedMonth,
   onSelectCategory
 }) => {
+  const { formatCurrency } = useCurrency();
   const [selectedCat, setSelectedCat] = useState<DeepDiveCategory>(initialCategory);
   const [breakdown, setBreakdown] = useState<CategoryBreakdown | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,7 +110,7 @@ export const CategoriesPage: React.FC<CategoriesPageProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <MetricCard
               title={`${breakdown.category} Total Spend`}
-              value={`$${breakdown.totalCost.toFixed(2)}`}
+              value={formatCurrency(breakdown.totalCost)}
               subtitle={`${breakdown.percentOfTotalSpend}% of your entire monthly AWS bill`}
               icon={<DollarSign className="w-5 h-5 text-brand-500" />}
             />
@@ -149,7 +151,7 @@ export const CategoriesPage: React.FC<CategoriesPageProps> = ({
                       </span>
                     </div>
                     <div className="text-xl font-black text-slate-900 dark:text-white">
-                      ${s.cost.toFixed(2)}
+                      {formatCurrency(s.cost)}
                     </div>
                   </div>
 
@@ -164,7 +166,7 @@ export const CategoriesPage: React.FC<CategoriesPageProps> = ({
                             {comp.name}
                           </span>
                           <span className="text-sm font-extrabold text-brand-600 dark:text-brand-400">
-                            ${comp.cost.toFixed(2)}
+                            {formatCurrency(comp.cost)}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">

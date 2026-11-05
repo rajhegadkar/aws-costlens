@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { fetchInvoiceReconciliation } from '../api/client.js';
 import { InvoiceReconciliation } from '../../shared/types.js';
+import { useCurrency } from '../context/CurrencyContext.js';
 
 interface InvoiceReconciliationPageProps {
   selectedMonth?: string;
@@ -19,6 +20,7 @@ interface InvoiceReconciliationPageProps {
 export const InvoiceReconciliationPage: React.FC<InvoiceReconciliationPageProps> = ({ selectedMonth }) => {
   const [invoice, setInvoice] = useState<InvoiceReconciliation | null>(null);
   const [loading, setLoading] = useState(true);
+  const { formatCurrency, activeConfig } = useCurrency();
 
   useEffect(() => {
     setLoading(true);
@@ -74,7 +76,7 @@ export const InvoiceReconciliationPage: React.FC<InvoiceReconciliationPageProps>
             AWS Invoice Statement — {invoice.billingPeriod}
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Every dollar and cent reconciled against your AWS billing records without any omitted services.
+            Every dollar and cent reconciled against your AWS billing records in {activeConfig.label}.
           </p>
         </div>
 
@@ -95,8 +97,7 @@ export const InvoiceReconciliationPage: React.FC<InvoiceReconciliationPageProps>
               Billing Period: {invoice.startDate} to {invoice.endDate}
             </span>
             <div className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-1">
-              ${invoice.totalInvoiceAmount.toFixed(2)}{' '}
-              <span className="text-base font-bold text-slate-400">{invoice.currency}</span>
+              {formatCurrency(invoice.totalInvoiceAmount)}
             </div>
             {invoice.isCurrentMonthEstimate && (
               <span className="mt-1 inline-block text-xs font-bold text-amber-600 dark:text-amber-400">
@@ -109,14 +110,14 @@ export const InvoiceReconciliationPage: React.FC<InvoiceReconciliationPageProps>
             <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200/60 dark:border-slate-700">
               <span className="text-slate-400 block font-medium">Subtotal (Usage Charges)</span>
               <span className="text-base font-black text-slate-800 dark:text-slate-200">
-                ${invoice.subtotalUsage.toFixed(2)}
+                {formatCurrency(invoice.subtotalUsage)}
               </span>
             </div>
 
             <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200/60 dark:border-slate-700">
               <span className="text-slate-400 block font-medium">Taxes & Surcharges</span>
               <span className="text-base font-black text-slate-800 dark:text-slate-200">
-                ${invoice.taxAmount.toFixed(2)}
+                {formatCurrency(invoice.taxAmount)}
               </span>
             </div>
 
@@ -155,7 +156,7 @@ export const InvoiceReconciliationPage: React.FC<InvoiceReconciliationPageProps>
               <tr>
                 <th className="py-3.5 px-4">Line Item / Service</th>
                 <th className="py-3.5 px-4">Category Type</th>
-                <th className="py-3.5 px-4 text-right">Invoiced Amount</th>
+                <th className="py-3.5 px-4 text-right">Invoiced Amount ({activeConfig.symbol})</th>
                 <th className="py-3.5 px-4 text-right">% of Total Bill</th>
               </tr>
             </thead>
@@ -182,7 +183,7 @@ export const InvoiceReconciliationPage: React.FC<InvoiceReconciliationPageProps>
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-right font-black text-slate-900 dark:text-white">
-                    ${item.amount.toFixed(2)}
+                    {formatCurrency(item.amount)}
                   </td>
                   <td className="py-3.5 px-4 text-right font-bold text-slate-700 dark:text-slate-300">
                     {item.percentage}%
@@ -196,10 +197,10 @@ export const InvoiceReconciliationPage: React.FC<InvoiceReconciliationPageProps>
                   Total Payable Amount
                 </td>
                 <td className="py-4 px-4 text-slate-400 font-mono text-xs">
-                  (USD)
+                  ({activeConfig.code})
                 </td>
                 <td className="py-4 px-4 text-right text-lg text-slate-900 dark:text-white">
-                  ${invoice.totalInvoiceAmount.toFixed(2)}
+                  {formatCurrency(invoice.totalInvoiceAmount)}
                 </td>
                 <td className="py-4 px-4 text-right text-slate-900 dark:text-white">
                   100%
