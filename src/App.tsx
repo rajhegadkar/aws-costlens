@@ -537,40 +537,46 @@ export function App() {
   return (
     <CurrencyProvider>
       <RoleProvider>
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors">
-          <Navbar
-            authStatus={authStatus}
-            lastUpdated={overview?.lastUpdated || ''}
-            availableMonths={availableMonths}
-            selectedMonth={selectedMonth}
-            onMonthChange={handleMonthChange}
-            onRefresh={handleRefresh}
-            onProfileChange={handleProfileChange}
-            onNavigate={handleNavigate}
-            darkMode={darkMode}
-            setDarkMode={setDarkMode}
-            currentUser={currentUser}
-            onLogout={handleLogout}
-            onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            isMobileMenuOpen={isMobileMenuOpen}
-          />
-
-          <div className="flex-1 flex max-w-[1700px] w-full mx-auto">
-            <Sidebar
-              currentPage={currentPage}
-              selectedCategory={selectedCategory}
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors print:bg-white print:text-slate-900 print:min-h-0">
+          <div className="print:hidden">
+            <Navbar
+              authStatus={authStatus}
+              lastUpdated={overview?.lastUpdated || ''}
+              availableMonths={availableMonths}
+              selectedMonth={selectedMonth}
+              onMonthChange={handleMonthChange}
+              onRefresh={handleRefresh}
+              onProfileChange={handleProfileChange}
               onNavigate={handleNavigate}
-              isMobileOpen={isMobileMenuOpen}
-              onCloseMobile={() => setIsMobileMenuOpen(false)}
+              darkMode={darkMode}
+              setDarkMode={setDarkMode}
+              currentUser={currentUser}
+              onLogout={handleLogout}
+              onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              isMobileMenuOpen={isMobileMenuOpen}
             />
-            <main className="flex-1 p-3 sm:p-6 lg:p-8 min-w-0 max-w-7xl mx-auto w-full">
+          </div>
+
+          <div className="flex-1 flex max-w-[1700px] w-full mx-auto print:max-w-none print:w-full print:block">
+            <div className="print:hidden">
+              <Sidebar
+                currentPage={currentPage}
+                selectedCategory={selectedCategory}
+                onNavigate={handleNavigate}
+                isMobileOpen={isMobileMenuOpen}
+                onCloseMobile={() => setIsMobileMenuOpen(false)}
+              />
+            </div>
+            <main className="flex-1 p-3 sm:p-6 lg:p-8 min-w-0 max-w-7xl mx-auto w-full print:p-0 print:m-0 print:max-w-none print:w-full">
               <ErrorBoundary onResetPage={() => handleNavigate('overview')}>
                 {renderContent()}
               </ErrorBoundary>
             </main>
           </div>
 
-          <FloatingAskButton currentPage={currentPage} onNavigate={handleNavigate} />
+          <div className="print:hidden">
+            <FloatingAskButton currentPage={currentPage} onNavigate={handleNavigate} />
+          </div>
         </div>
       </RoleProvider>
     </CurrencyProvider>

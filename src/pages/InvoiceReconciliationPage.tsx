@@ -150,7 +150,7 @@ export const InvoiceReconciliationPage: React.FC<InvoiceReconciliationPageProps>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-sm min-w-[600px]">
             <thead className="bg-slate-50/70 dark:bg-slate-700/40 border-b border-slate-100 dark:border-slate-700 text-xs font-bold uppercase tracking-wider text-slate-500">
               <tr>
                 <th className="py-3.5 px-4">Line Item / Service</th>

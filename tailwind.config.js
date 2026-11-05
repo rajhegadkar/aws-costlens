@@ -23,6 +23,7 @@ export default {
         },
         slate: {
           150: '#e9eef5',
+          750: '#1e293b',
           850: '#151f32',
         },
         aws: {

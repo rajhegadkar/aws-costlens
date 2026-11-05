@@ -18,7 +18,7 @@ export const FloatingAskButton: React.FC<FloatingAskButtonProps> = ({
   return (
     <aside
       aria-label="FinOps Assistant Quick Access"
-      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 group"
+      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 group print:hidden"
     >
       <button
         onClick={() => onNavigate('ask')}

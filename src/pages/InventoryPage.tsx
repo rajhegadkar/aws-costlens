@@ -271,9 +271,9 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                   onChange={(e) => setEc2SortBy(e.target.value as any)}
                   className="bg-transparent font-bold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer"
                 >
-                  <option value="cost-desc">Sort: Highest Cost</option>
-                  <option value="state">Sort: Running First</option>
-                  <option value="name">Sort: Name (A–Z)</option>
+                  <option value="cost-desc" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Sort: Highest Cost</option>
+                  <option value="state" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Sort: Running First</option>
+                  <option value="name" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Sort: Name (A–Z)</option>
                 </select>
               </div>
             </>
@@ -287,9 +287,9 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ selectedMonth, onN
                 onChange={(e) => setS3SortBy(e.target.value as any)}
                 className="bg-transparent font-bold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer"
               >
-                <option value="cost-desc">Sort: Highest Billing</option>
-                <option value="size-desc">Sort: Largest Size (GB)</option>
-                <option value="name">Sort: Bucket Name (A–Z)</option>
+                <option value="cost-desc" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Sort: Highest Billing</option>
+                <option value="size-desc" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Sort: Largest Size (GB)</option>
+                <option value="name" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Sort: Bucket Name (A–Z)</option>
               </select>
             </div>
           )}

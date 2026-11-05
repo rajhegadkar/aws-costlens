@@ -23,3 +23,69 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.7);
 }
+
+/* Print and PDF Generation Overrides */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm 12mm 12mm;
+  }
+
+  /* Force clean white canvas and dark text regardless of dark mode state */
+  *,
+  *::before,
+  *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html,
+  body,
+  #root,
+  div,
+  main,
+  section,
+  article {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Explicitly hide navigation, floating buttons and controls */
+  .no-print,
+  .print\:hidden,
+  header,
+  aside,
+  nav {
+    display: none !important;
+  }
+
+  /* Prevent awkward page-break splits inside tables, rows, and cards */
+  .print-break-inside-avoid,
+  .printable-canvas,
+  table,
+  tbody tr,
+  thead,
+  tfoot,
+  .rounded-3xl,
+  .rounded-2xl {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Ensure printed tables use 100% paper width without scrollbars */
+  table {
+    width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  /* Thin crisp borders for printed documents */
+  .border,
+  .border-b,
+  .border-t,
+  .border-r,
+  .border-l {
+    border-color: #cbd5e1 !important;
+  }
+}

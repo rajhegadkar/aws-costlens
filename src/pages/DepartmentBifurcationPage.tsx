@@ -503,7 +503,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs min-w-[800px]">
             <thead className="bg-slate-50/75 dark:bg-slate-800/60 text-slate-400 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100 dark:border-slate-700">
               <tr>
                 <th className="py-3 px-4">Resource & Machine Name</th>
@@ -564,14 +564,14 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                           <select
                             value={res.departmentId}
                             onChange={(e) => handleAssignDepartment(res.resourceId, e.target.value)}
-                            className={`text-xs font-bold rounded-xl px-2.5 py-1 border transition-colors cursor-pointer ${colors.bg} ${colors.text} ${colors.border}`}
+                            className={`text-xs font-bold rounded-xl px-2.5 py-1 border transition-colors cursor-pointer dark:bg-slate-800 ${colors.bg} ${colors.text} ${colors.border}`}
                           >
                             {report.departments.map((d) => (
-                              <option key={d.departmentId} value={d.departmentId}>
+                              <option key={d.departmentId} value={d.departmentId} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
                                 {d.departmentName}
                               </option>
                             ))}
-                            <option value="unallocated">Unallocated / Review</option>
+                            <option value="unallocated" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Unallocated / Review</option>
                           </select>
                           <span
                             className="text-[9px] uppercase font-bold text-slate-400"
