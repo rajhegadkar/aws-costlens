@@ -8,8 +8,9 @@ import {
   ShieldAlert,
   Info
 } from 'lucide-react';
-import { fetchAnomalies, fetchSavings } from '../api/client.js';
+import { fetchAnomalies, fetchSavings, sendTestWebhookAlert } from '../api/client.js';
 import { CostAnomaly, CostSavings } from '../../shared/types.js';
+import { Bell, CheckCircle2 } from 'lucide-react';
 
 interface AnomaliesPageProps {
   onSelectService: (serviceName: string) => void;
@@ -20,6 +21,8 @@ export const AnomaliesPage: React.FC<AnomaliesPageProps> = ({ onSelectService, s
   const [anomalies, setAnomalies] = useState<CostAnomaly[]>([]);
   const [savings, setSavings] = useState<CostSavings[]>([]);
   const [loading, setLoading] = useState(true);
+  const [testingWebhook, setTestingWebhook] = useState(false);
+  const [webhookResult, setWebhookResult] = useState<any | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -35,20 +38,61 @@ export const AnomaliesPage: React.FC<AnomaliesPageProps> = ({ onSelectService, s
       });
   }, [selectedMonth]);
 
+  const handleTestWebhook = async () => {
+    setTestingWebhook(true);
+    try {
+      const topAnom = anomalies[0];
+      const res = await sendTestWebhookAlert({
+        departmentName: topAnom ? topAnom.service : 'Engineering & Backend',
+        amount: topAnom ? topAnom.currentCost : 85.50,
+        threshold: 75.00
+      });
+      setWebhookResult(res);
+      setTimeout(() => setWebhookResult(null), 6000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTestingWebhook(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-12 text-center text-slate-400">Scanning for spending spikes and savings...</div>;
   }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-          Cost Anomalies & Savings
-        </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Automated statistical detection of sudden spending spikes, plus positive cost reductions ("Good News").
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            Cost Anomalies & Proactive Alerting
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Automated statistical detection of sudden spending spikes, plus positive cost reductions ("Good News").
+          </p>
+        </div>
+
+        <button
+          onClick={handleTestWebhook}
+          disabled={testingWebhook}
+          className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs hover:bg-slate-800 transition-colors shadow-sm shrink-0"
+        >
+          <Bell className="w-3.5 h-3.5 text-amber-400" />
+          <span>{testingWebhook ? 'Dispatching...' : 'Simulate Slack / Teams Webhook'}</span>
+        </button>
       </div>
+
+      {webhookResult && (
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 space-y-1.5 animate-in fade-in">
+          <div className="flex items-center space-x-2 font-bold">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>Webhook Dispatched: {webhookResult.destination}</span>
+          </div>
+          <div className="font-mono text-[11px] bg-white/60 dark:bg-slate-900/60 p-2 rounded-xl text-slate-700 dark:text-slate-300">
+            {JSON.stringify(webhookResult.payload, null, 2)}
+          </div>
+        </div>
+      )}
 
       {/* Section 1: Cost Spikes & Anomalies */}
       <div className="space-y-4">

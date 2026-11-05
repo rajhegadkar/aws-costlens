@@ -19,9 +19,14 @@ import { InventoryPage } from './pages/InventoryPage.js';
 import { ActivityPage } from './pages/ActivityPage.js';
 import { InvoiceReconciliationPage } from './pages/InvoiceReconciliationPage.js';
 import { DepartmentBifurcationPage } from './pages/DepartmentBifurcationPage.js';
+import { WasteHunterPage } from './pages/WasteHunterPage.js';
+import { ForecastPage } from './pages/ForecastPage.js';
+import { ExecutiveReportPage } from './pages/ExecutiveReportPage.js';
 import { AskQuestionPage } from './pages/AskQuestionPage.js';
 import { FloatingAskButton } from './components/common/FloatingAskButton.js';
 import { ErrorBoundary } from './components/common/ErrorBoundary.js';
+import { CurrencyProvider } from './context/CurrencyContext.js';
+import { RoleProvider } from './context/RoleContext.js';
 import {
   fetchDashboardOverview,
   fetchCostTimeline,
@@ -468,6 +473,15 @@ export function App() {
       case 'bifurcation':
         return <DepartmentBifurcationPage selectedMonth={selectedMonth} />;
 
+      case 'waste':
+        return <WasteHunterPage />;
+
+      case 'forecast':
+        return <ForecastPage />;
+
+      case 'executive':
+        return <ExecutiveReportPage selectedMonth={selectedMonth} />;
+
       case 'tags':
         return <TagsPage selectedMonth={selectedMonth} />;
 
@@ -521,41 +535,45 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors">
-      <Navbar
-        authStatus={authStatus}
-        lastUpdated={overview?.lastUpdated || ''}
-        availableMonths={availableMonths}
-        selectedMonth={selectedMonth}
-        onMonthChange={handleMonthChange}
-        onRefresh={handleRefresh}
-        onProfileChange={handleProfileChange}
-        onNavigate={handleNavigate}
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
-        currentUser={currentUser}
-        onLogout={handleLogout}
-        onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        isMobileMenuOpen={isMobileMenuOpen}
-      />
+    <CurrencyProvider>
+      <RoleProvider>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors">
+          <Navbar
+            authStatus={authStatus}
+            lastUpdated={overview?.lastUpdated || ''}
+            availableMonths={availableMonths}
+            selectedMonth={selectedMonth}
+            onMonthChange={handleMonthChange}
+            onRefresh={handleRefresh}
+            onProfileChange={handleProfileChange}
+            onNavigate={handleNavigate}
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            currentUser={currentUser}
+            onLogout={handleLogout}
+            onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            isMobileMenuOpen={isMobileMenuOpen}
+          />
 
-      <div className="flex-1 flex max-w-[1700px] w-full mx-auto">
-        <Sidebar
-          currentPage={currentPage}
-          selectedCategory={selectedCategory}
-          onNavigate={handleNavigate}
-          isMobileOpen={isMobileMenuOpen}
-          onCloseMobile={() => setIsMobileMenuOpen(false)}
-        />
-        <main className="flex-1 p-3 sm:p-6 lg:p-8 min-w-0 max-w-7xl mx-auto w-full">
-          <ErrorBoundary onResetPage={() => handleNavigate('overview')}>
-            {renderContent()}
-          </ErrorBoundary>
-        </main>
-      </div>
+          <div className="flex-1 flex max-w-[1700px] w-full mx-auto">
+            <Sidebar
+              currentPage={currentPage}
+              selectedCategory={selectedCategory}
+              onNavigate={handleNavigate}
+              isMobileOpen={isMobileMenuOpen}
+              onCloseMobile={() => setIsMobileMenuOpen(false)}
+            />
+            <main className="flex-1 p-3 sm:p-6 lg:p-8 min-w-0 max-w-7xl mx-auto w-full">
+              <ErrorBoundary onResetPage={() => handleNavigate('overview')}>
+                {renderContent()}
+              </ErrorBoundary>
+            </main>
+          </div>
 
-      <FloatingAskButton currentPage={currentPage} onNavigate={handleNavigate} />
-    </div>
+          <FloatingAskButton currentPage={currentPage} onNavigate={handleNavigate} />
+        </div>
+      </RoleProvider>
+    </CurrencyProvider>
   );
 }
 

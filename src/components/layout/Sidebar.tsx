@@ -22,9 +22,13 @@ import {
   Sparkles,
   HelpCircle,
   Building2,
+  Trash2,
+  TrendingUp,
+  FileText,
   X
 } from 'lucide-react';
 import type { DeepDiveCategory } from '../../../shared/types.js';
+import { useRole } from '../../context/RoleContext.js';
 
 interface SidebarProps {
   currentPage: string;
@@ -41,8 +45,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isMobileOpen = false,
   onCloseMobile
 }) => {
+  const { isNavAllowed } = useRole();
+
   const NAV_ITEMS = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, category: 'Core' },
+    { id: 'forecast', label: 'Cost Forecasting', icon: TrendingUp, category: 'Core', badge: 'V3' },
     { id: 'ask', label: 'Ask CostLens (Q&A)', icon: Sparkles, category: 'Core', badge: 'Q&A' },
     { id: 'invoice', label: 'Bill & Reconciliation', icon: Receipt, category: 'Core' },
     { id: 'services', label: 'AWS Services', icon: Layers, category: 'Core' },
@@ -63,9 +70,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'tags', label: 'Cost Tags', icon: Tags, category: 'Allocation' },
     { id: 'accounts', label: 'Linked Accounts', icon: Users, category: 'Allocation' },
 
+    { id: 'waste', label: 'FinOps Waste Hunter', icon: Trash2, category: 'Insights', badge: 'V3' },
     { id: 'anomalies', label: 'Anomalies & Savings', icon: AlertTriangle, category: 'Insights' },
     { id: 'glossary', label: 'Plain English Glossary', icon: BookOpen, category: 'Insights' },
 
+    { id: 'executive', label: 'Executive Board Report', icon: FileText, category: 'System', badge: 'V3' },
     { id: 'export', label: 'Export & Reports', icon: Download, category: 'System' },
     { id: 'settings', label: 'Safety & Permissions', icon: ShieldCheck, category: 'System' }
   ];
@@ -82,7 +91,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navContent = (
     <div className="space-y-6">
       {categories.map((cat) => {
-        const items = NAV_ITEMS.filter((item) => item.category === cat);
+        const items = NAV_ITEMS.filter((item) => item.category === cat && isNavAllowed(item.id));
+        if (items.length === 0) return null;
         return (
           <div key={cat}>
             <div className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">

@@ -1,7 +1,7 @@
 # ☁️ AWS CostLens — Self-Hosted, 100% Read-Only AWS FinOps Dashboard
 
 [![CI & Read-Only Security Audit](https://github.com/rajhegadkar/aws-costlens/actions/workflows/ci.yml/badge.svg)](https://github.com/rajhegadkar/aws-costlens/actions)
-[![Release](https://img.shields.io/badge/Release-v2.0.0-orange.svg)](https://github.com/rajhegadkar/aws-costlens/releases/tag/v2.0.0)
+[![Release](https://img.shields.io/badge/Release-v3.0.0-orange.svg)](https://github.com/rajhegadkar/aws-costlens/releases/tag/v3.0.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Read-Only Safety](https://img.shields.io/badge/AWS%20API-100%25%20Read--Only%20Enforced-emerald.svg)](#-critical-safety-architecture--100-read-only)
 [![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933.svg)](https://nodejs.org/)
@@ -15,30 +15,31 @@ Run it on **any Windows PC, Ubuntu/Linux server, macOS laptop, Docker container,
 
 ---
 
-## 🚀 Version 2.0 Release Highlights
+## 🚀 Version 3.0 Release Highlights
 
-AWS CostLens v2.0 introduces **Department Cost Bifurcation**, **Unified Resource Total Cost of Ownership (TCO)**, and **100% Mathematical Reconciliation to the Amazon Bill**:
+AWS CostLens v3.0 introduces an enterprise-grade FinOps suite featuring **Idle Resource Waste Hunter**, **Predictive Run-Rate Cost Forecasting**, **Multi-Currency Global Accounting**, **Board-Ready Executive PDF Reports**, **Department Budget Alerts**, and **Role-Based Persona Switching**:
 
-- 🏢 **Department Cost Bifurcation & Allocation Engine**:
-  - Overcomes missing, informal, or incomplete AWS tags by categorizing cloud spend into custom departments (**Engineering & Backend**, **Data Science & AI**, **Marketing & Web Apps**, **IT Operations & DevOps**, **Corporate & Internal**, or custom departments).
-  - Multi-tier assignment matching: **AWS Cost Allocation Tags** $\rightarrow$ **Custom User Rules** $\rightarrow$ **Automated Workload Heuristics** $\rightarrow$ **Unallocated Review Queue**.
-  - Interactive **1-click department reassignment** directly inside the table that persists rules to disk.
-- 💰 **Unified Resource Total Cost of Ownership (TCO)**:
-  - Replaces fragmented AWS bill line items with an **All-In combined final amount** per machine or storage bucket.
-  - **EC2 Virtual Machines**: Combines compute runtime + attached EBS SSDs + snapshots + dedicated public IPv4 allocation (\$0.005/hr) + outbound internet data transfer.
-  - **S3 Storage Buckets**: Combines storage tiers (Standard, Infrequent Access, Glacier) + API requests (PUT/GET/LIST) + download data transfer egress.
-  - **RDS Databases**: Combines engine compute + allocated SSD storage + automated backup retention + cross-AZ replication.
-  - Interactive formula breakdowns: expanding any resource reveals the exact plain English calculation formula.
-- 🌐 **Dedicated Shared Cloud Platform & Network Category**:
-  - Transparently itemizes account-wide foundational infrastructure (NAT Gateways, Route 53 DNS, CloudWatch monitoring, KMS encryption, Support fees) while keeping individual machine costs pure.
-- ⚖️ **100% Mathematical Bill Reconciliation**:
-  - Proves that $\sum \text{Departments} + \text{Shared Network Platform} + \text{Taxes} = \text{Official Amazon Bill}$ with **\$0.00 variance**.
-- 📊 **Executive & Finance CSV Export**:
-  - One-click export generating finance-ready spreadsheets with resource-level TCO, department summaries, and reconciliation proofs.
-
----
-
-## 🛠️ Bug Fixes & Platform Hardening in v2.0
+- 🎯 **FinOps Waste Hunter (Immediate Cloud Cost Reduction)**:
+  - Scans for **unattached EBS storage volumes**, **stopped EC2 instances** accumulating provisioned disk charges, **unallocated Elastic IPs** billed hourly, and **S3 buckets without lifecycle rules**.
+  - **Recoverable Savings Scorecard**: Calculates exact monthly dollars recoverable with non-technical, step-by-step remediation instructions.
+  - One-click CSV export of all waste opportunities for IT operations teams.
+- 📈 **Predictive Run-Rate Cost Forecasting & "What-If" Sandbox**:
+  - Projects final month-end spend using weighted moving average burn rates and day-of-week seasonality.
+  - **Statistical Confidence Bounds**: Displays Conservative Min (-10%) to Peak Max (+18%) ranges on an interactive trajectory chart.
+  - **"What-If" Scenario Simulator**: Test architectural decisions (e.g. weekend staging server shutdowns or adding new VM instances) with live recalculation.
+- 💱 **Multi-Currency Global Accounting (USD `$`, INR `₹`, EUR `€`, GBP `£`)**:
+  - Instant one-click currency switcher across all KPI cards, department matrices, and billing reports.
+  - Built-in support for statutory local tax inclusion (**18% GST for India**, **20% VAT for Europe/UK**).
+- 📑 **1-Click Executive Board Presentation & PDF Generator**:
+  - Leadership and CFO-ready presentation summary formatted for crisp print and PDF export (`window.print()`).
+  - Summarizes month-to-date spend, department cost bifurcation, projected growth, top drivers, and verified reconciliation audit stamps.
+- 🔔 **Department Budget Limits & Webhook Alerting (Slack / Teams)**:
+  - Configurable monthly budget targets per department with visual burn-rate progress bars (`On Track`, `Approaching Limit`, `Limit Exceeded`).
+  - Interactive webhook simulation dispatching JSON alert payloads formatted for Slack, Microsoft Teams, or Discord.
+- 👥 **Role-Based Access Control (RBAC) Persona Switcher**:
+  - Seamlessly switch between tailored user personas: **Administrator** (full access), **Finance & Accounting** (costs, departments, executive PDFs), **DevOps & Cloud Architect** (inventory, activity logs, waste hunter), and **Executive Viewer** (high-level KPI summaries).
+- 🏢 **Retains Full Version 2.0 Department Bifurcation & 100% Reconciliation**:
+  - Multi-tier matching (Tags $\rightarrow$ Rules $\rightarrow$ Heuristics), Unified Resource TCO (Compute + EBS SSD + IPv4 + Egress), and **$0.00 mathematical reconciliation variance** to the official AWS bill.
 
 - **Universal Mathematical Reconciliation**: Ensured 100% mathematical bill reconciliation across live AWS accounts and offline demo modes with zero floating-point drift.
 - **Windows PowerShell 5.1 & Batch Compatibility**: Replaced problematic multi-byte emoji encodings and delayed-expansion parenthesis blocks in `start.bat` and `start.ps1`, eliminating syntax errors on Windows 10/11.

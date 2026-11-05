@@ -23,6 +23,7 @@ const DEFAULT_DEPARTMENTS: DepartmentDefinition[] = [
     name: 'Engineering & Backend',
     color: 'blue',
     description: 'Core application backends, API servers, worker nodes, and main software infrastructure.',
+    budget: 85.00,
     allocationRules: [
       { id: 'r1', targetDepartmentId: 'dept-eng', matchType: 'tag', pattern: 'Project=core-platform', priority: 1 },
       { id: 'r2', targetDepartmentId: 'dept-eng', matchType: 'name_prefix', pattern: 'prod-core', priority: 2 },
@@ -35,6 +36,7 @@ const DEFAULT_DEPARTMENTS: DepartmentDefinition[] = [
     name: 'Data Science & AI',
     color: 'purple',
     description: 'Artificial intelligence pipelines, model training instances, datasets, and analytics clusters.',
+    budget: 50.00,
     allocationRules: [
       { id: 'r5', targetDepartmentId: 'dept-data-ai', matchType: 'tag', pattern: 'Project=ai-inference-gpu', priority: 1 },
       { id: 'r6', targetDepartmentId: 'dept-data-ai', matchType: 'name_contains', pattern: 'ai', priority: 2 },
@@ -48,6 +50,7 @@ const DEFAULT_DEPARTMENTS: DepartmentDefinition[] = [
     name: 'Marketing & Web Apps',
     color: 'emerald',
     description: 'Customer portals, marketing websites, public static assets, and CDN delivery storage.',
+    budget: 35.00,
     allocationRules: [
       { id: 'r10', targetDepartmentId: 'dept-web-mkt', matchType: 'tag', pattern: 'Project=customer-portal', priority: 1 },
       { id: 'r11', targetDepartmentId: 'dept-web-mkt', matchType: 'name_contains', pattern: 'web', priority: 2 },
@@ -61,6 +64,7 @@ const DEFAULT_DEPARTMENTS: DepartmentDefinition[] = [
     name: 'IT Operations & DevOps',
     color: 'amber',
     description: 'Disaster recovery backups, cold archives, staging servers, and infrastructure maintenance.',
+    budget: 25.00,
     allocationRules: [
       { id: 'r15', targetDepartmentId: 'dept-ops', matchType: 'tag', pattern: 'Owner=devops', priority: 1 },
       { id: 'r16', targetDepartmentId: 'dept-ops', matchType: 'name_contains', pattern: 'backup', priority: 2 },
@@ -73,6 +77,7 @@ const DEFAULT_DEPARTMENTS: DepartmentDefinition[] = [
     name: 'Corporate & Internal',
     color: 'rose',
     description: 'Internal corporate tooling, documentation, office services, and employee administrative workloads.',
+    budget: 20.00,
     allocationRules: [
       { id: 'r19', targetDepartmentId: 'dept-corp', matchType: 'name_contains', pattern: 'corp', priority: 1 },
       { id: 'r20', targetDepartmentId: 'dept-corp', matchType: 'name_contains', pattern: 'internal', priority: 2 },
@@ -90,7 +95,11 @@ export class DepartmentService {
         const raw = fs.readFileSync(this.configFilePath, 'utf-8');
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          const defaultMap = new Map(DEFAULT_DEPARTMENTS.map(d => [d.id, d.budget]));
+          return parsed.map((d: DepartmentDefinition) => ({
+            ...d,
+            budget: typeof d.budget === 'number' ? d.budget : (defaultMap.get(d.id) ?? 50.00)
+          }));
         }
       }
     } catch (err) {
@@ -557,12 +566,33 @@ export class DepartmentService {
       const otherCost = round2(resList.reduce((acc, r) => acc + r.otherCost, 0));
       const percentageOfBill = totalOfficialBill > 0 ? round2((totalCost / totalOfficialBill) * 100) : 0;
 
+      const budget = d.budget;
+      const budgetUsedPercent = budget && budget > 0 ? round2((totalCost / budget) * 100) : undefined;
+      const now = new Date();
+      const daysInMonth = 30;
+      const daysElapsed = Math.min(Math.max(now.getDate(), 1), daysInMonth);
+      const projectedMonthEnd = round2(totalCost * (daysInMonth / daysElapsed));
+
+      let budgetStatus: 'on_track' | 'approaching_limit' | 'exceeded' | undefined = undefined;
+      if (budget && budget > 0) {
+        if (totalCost >= budget) {
+          budgetStatus = 'exceeded';
+        } else if (totalCost >= budget * 0.80 || projectedMonthEnd >= budget) {
+          budgetStatus = 'approaching_limit';
+        } else {
+          budgetStatus = 'on_track';
+        }
+      }
+
       return {
         departmentId: d.id,
         departmentName: d.name,
         color: d.color,
         description: d.description,
-        budget: d.budget,
+        budget,
+        budgetUsedPercent,
+        projectedMonthEnd,
+        budgetStatus,
         totalCost,
         percentageOfBill,
         computeCost,

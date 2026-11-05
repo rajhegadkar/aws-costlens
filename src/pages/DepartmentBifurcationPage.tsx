@@ -200,8 +200,8 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-orange-500 text-white font-black text-[10px] uppercase tracking-wider">
-              Version 2.0
+            <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-[10px] uppercase tracking-wider">
+              Version 3.0
             </span>
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
               {report.billingPeriod}
@@ -336,10 +336,49 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60">
-                <div className="text-lg font-black text-slate-900 dark:text-white">
-                  ${dept.totalCost.toFixed(2)}
+                <div className="flex items-baseline justify-between">
+                  <div className="text-lg font-black text-slate-900 dark:text-white">
+                    ${dept.totalCost.toFixed(2)}
+                  </div>
+                  {dept.budget && (
+                    <span className="text-[11px] font-semibold text-slate-400">
+                      / ${dept.budget.toFixed(0)} limit
+                    </span>
+                  )}
                 </div>
-                <div className="text-[10px] text-slate-400 flex items-center justify-between mt-0.5">
+
+                {dept.budget && (
+                  <div className="mt-1.5 space-y-1">
+                    <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          dept.budgetStatus === 'exceeded'
+                            ? 'bg-rose-500'
+                            : dept.budgetStatus === 'approaching_limit'
+                            ? 'bg-amber-500'
+                            : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${Math.min(dept.budgetUsedPercent || 0, 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-slate-400 font-medium">
+                        {dept.budgetUsedPercent}% consumed
+                      </span>
+                      <span className={`font-bold ${
+                        dept.budgetStatus === 'exceeded'
+                          ? 'text-rose-600 dark:text-rose-400'
+                          : dept.budgetStatus === 'approaching_limit'
+                          ? 'text-amber-500'
+                          : 'text-emerald-500'
+                      }`}>
+                        {dept.budgetStatus === 'exceeded' ? 'Limit Exceeded' : dept.budgetStatus === 'approaching_limit' ? 'Approaching Limit' : 'On Track'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-[10px] text-slate-400 flex items-center justify-between mt-2 pt-1 border-t border-slate-100 dark:border-slate-700/40">
                   <span>{dept.resourceCount} resources</span>
                   <span className="font-semibold text-slate-600 dark:text-slate-300">
                     C:${dept.computeCost.toFixed(0)} • S:${dept.storageCost.toFixed(0)} • N:${dept.networkingCost.toFixed(0)}

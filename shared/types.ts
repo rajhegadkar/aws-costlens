@@ -420,6 +420,9 @@ export interface DepartmentCostSummary {
   color: string;
   description: string;
   budget?: number;
+  budgetUsedPercent?: number;
+  projectedMonthEnd?: number;
+  budgetStatus?: 'on_track' | 'approaching_limit' | 'exceeded';
   totalCost: number;
   percentageOfBill: number;
   computeCost: number;
@@ -451,5 +454,100 @@ export interface DepartmentBifurcationReport {
   unallocatedResources: ResourceCostItemTCO[];
   sharedPlatformServices: SharedPlatformServiceItem[];
   availableDepartments: DepartmentDefinition[];
+}
+
+// ==========================================
+// VERSION 3.0: FINOPS WASTE HUNTER, FORECASTING,
+// MULTI-CURRENCY & ENTERPRISE GOVERNANCE
+// ==========================================
+
+export type WasteResourceType =
+  | 'EBS_UNATTACHED'
+  | 'EC2_STOPPED'
+  | 'EC2_IDLE'
+  | 'UNUSED_ELASTIC_IP'
+  | 'S3_INACTIVE_TIER';
+
+export interface WasteResourceItem {
+  id: string;
+  resourceId: string;
+  name: string;
+  resourceType: WasteResourceType;
+  typeName: string;
+  region: string;
+  monthlyCost: number;
+  savingsPotential: number;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  daysInactive?: number;
+  nonTechnicalRemediation: string;
+  details?: string;
+  tags?: Record<string, string>;
+}
+
+export interface WasteHunterReport {
+  scannedAt: string;
+  totalPotentialMonthlySavings: number;
+  totalWasteItems: number;
+  summaryByCategory: {
+    unattachedEbs: { count: number; savings: number };
+    stoppedEc2: { count: number; savings: number };
+    idleEc2: { count: number; savings: number };
+    unusedElasticIps: { count: number; savings: number };
+    s3Inefficient: { count: number; savings: number };
+  };
+  items: WasteResourceItem[];
+}
+
+export interface ForecastPoint {
+  date: string;
+  dayOfMonth: number;
+  actualSpend?: number;
+  projectedSpend?: number;
+  minConfidence?: number;
+  maxConfidence?: number;
+}
+
+export interface CostForecastReport {
+  billingPeriod: string;
+  currentMonthSpend: number;
+  daysElapsed: number;
+  daysInMonth: number;
+  runRateDaily: number;
+  previousMonthSpend: number;
+  projectedMonthEnd: number;
+  projectedGrowthPercent: number;
+  confidenceInterval: {
+    min: number;
+    expected: number;
+    max: number;
+  };
+  dailyPoints: ForecastPoint[];
+  keyDrivers: {
+    serviceName: string;
+    projectedCost: number;
+    growthPercent: number;
+    driverSummary: string;
+  }[];
+}
+
+export type CurrencyCode = 'USD' | 'INR' | 'EUR' | 'GBP';
+
+export interface CurrencyConfig {
+  code: CurrencyCode;
+  symbol: string;
+  label: string;
+  rateToUsd: number; // 1 USD in target currency
+  taxMultiplier?: number; // e.g. 1.18 for 18% GST display
+  taxLabel?: string;
+}
+
+export type UserRole = 'admin' | 'finance' | 'devops' | 'viewer';
+
+export interface RoleDefinition {
+  id: UserRole;
+  label: string;
+  description: string;
+  badgeColor: string;
+  allowedNavItems: string[];
 }
 

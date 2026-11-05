@@ -19,7 +19,9 @@ import {
   CloudTrailActivityItem,
   DeepDiveCategory,
   DepartmentBifurcationReport,
-  DepartmentDefinition
+  DepartmentDefinition,
+  WasteHunterReport,
+  CostForecastReport
 } from '../../shared/types.js';
 
 const API_BASE = '/api';
@@ -315,5 +317,37 @@ export async function deleteDepartment(departmentId: string): Promise<Department
   if (!res.ok) throw new Error('Failed to delete department');
   const data = await res.json();
   return data.departments;
+}
+
+// ==========================================
+// VERSION 3.0: FINOPS WASTE HUNTER & FORECASTING
+// ==========================================
+
+export async function fetchWasteHunterReport(force = false): Promise<WasteHunterReport> {
+  const url = force ? `${API_BASE}/cost/waste?refresh=true` : `${API_BASE}/cost/waste`;
+  const res = await apiFetch(url);
+  if (!res.ok) throw new Error('Failed to scan for cloud waste');
+  return res.json();
+}
+
+export async function fetchCostForecast(): Promise<CostForecastReport> {
+  const res = await apiFetch(`${API_BASE}/cost/forecast`);
+  if (!res.ok) throw new Error('Failed to fetch cost forecast');
+  return res.json();
+}
+
+export async function sendTestWebhookAlert(params: {
+  webhookUrl?: string;
+  departmentName?: string;
+  amount?: number;
+  threshold?: number;
+}): Promise<any> {
+  const res = await apiFetch(`${API_BASE}/cost/alerts/test-webhook`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params)
+  });
+  if (!res.ok) throw new Error('Failed to dispatch webhook alert');
+  return res.json();
 }
 

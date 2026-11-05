@@ -33,9 +33,10 @@ app.use(
 app.use(express.json({ limit: '100kb' }));
 
 // Health check endpoint (unauthenticated for container orchestrators)
-app.get('/health', (_req: Request, res: Response) => {
+app.get(['/health', '/api/health'], (_req: Request, res: Response) => {
   res.json({
     status: 'healthy',
+    version: '3.0.0',
     mode: 'READ_ONLY',
     uptimeSeconds: Math.round(process.uptime()),
     cache: globalCache.getStats(),

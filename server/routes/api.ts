@@ -7,6 +7,8 @@ import {
 } from '../aws/costExplorerService.js';
 import { InventoryService } from '../aws/inventoryService.js';
 import { DepartmentService } from '../aws/departmentService.js';
+import { WasteHunterService } from '../aws/wasteHunterService.js';
+import { ForecastService } from '../aws/forecastService.js';
 import {
   setCurrentProfile,
   getCurrentProfile,
@@ -446,6 +448,70 @@ apiRouter.get('/cost/savings', async (req: Request, res: Response) => {
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// ==========================================
+// 6B. VERSION 3.0: FINOPS WASTE HUNTER & FORECASTING
+// ==========================================
+
+apiRouter.get('/cost/waste', async (req: Request, res: Response) => {
+  try {
+    const force = req.query.refresh === 'true';
+    const report = await WasteHunterService.scanWaste(force);
+    res.json(report);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+apiRouter.get('/cost/forecast', async (_req: Request, res: Response) => {
+  try {
+    const forecast = await ForecastService.getForecast();
+    res.json(forecast);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+apiRouter.post('/cost/alerts/test-webhook', (req: Request, res: Response) => {
+  try {
+    const { webhookUrl, alertType, departmentName, amount, threshold } = req.body || {};
+    const dept = departmentName || 'Engineering & Backend';
+    const spend = amount || 72.45;
+    const budget = threshold || 85.00;
+    const percent = Math.round((spend / budget) * 100);
+
+    const simulatedPayload = {
+      app: 'AWS CostLens v3.0',
+      timestamp: new Date().toISOString(),
+      alertType: alertType || 'BUDGET_OVERRUN_WARNING',
+      severity: percent >= 100 ? 'CRITICAL' : 'WARNING',
+      title: `🚨 FinOps Alert: ${dept} reached ${percent}% of monthly budget`,
+      department: dept,
+      currentSpend: `$${spend.toFixed(2)}`,
+      budgetThreshold: `$${budget.toFixed(2)}`,
+      percentageUsed: `${percent}%`,
+      recommendedAction: 'Inspect recent resource provisioning in AWS CostLens FinOps Waste Hunter tab.'
+    };
+
+    res.json({
+      success: true,
+      delivered: Boolean(webhookUrl),
+      destination: webhookUrl ? webhookUrl : 'Simulated (Local Console)',
+      payload: simulatedPayload
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+apiRouter.get('/health', (_req: Request, res: Response) => {
+  res.json({
+    status: 'healthy',
+    version: '3.0.0',
+    mode: 'READ_ONLY',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // ==========================================
