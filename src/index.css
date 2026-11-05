@@ -24,11 +24,13 @@
   background: rgba(148, 163, 184, 0.7);
 }
 
-/* Print and PDF Generation Overrides */
+/* ==========================================================================
+   Print and PDF Generation Engine
+   ========================================================================== */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm;
+    margin: 10mm 12mm 12mm 12mm;
   }
 
   /* Exact background and color fidelity for both Dark and Light modes */
@@ -38,47 +40,80 @@
     color-adjust: exact !important;
   }
 
-  /* Clean print canvas sizing */
+  /* Canvas and container resets */
   html,
   body,
-  #root {
+  #root,
+  #root > div {
     width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: visible !important;
   }
 
-  /* Dark mode background preservation in print */
+  main {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Dark mode preservation when screen theme is matched */
   html.dark body {
     background-color: #0f172a !important;
     color: #f8fafc !important;
   }
 
-  /* Explicitly hide navigation, floating buttons and controls */
-  .no-print,
-  .print\:hidden,
-  header,
-  aside,
-  nav {
-    display: none !important;
+  html.dark .printable-canvas {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
   }
 
   /* Clean up canvas frame on print */
   .printable-canvas {
+    width: 100% !important;
+    max-width: 100% !important;
     box-shadow: none !important;
     border: none !important;
+    border-radius: 0 !important;
     padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
   }
 
-  /* Ensure printed tables use 100% paper width and do not overflow horizontally */
+  /* Explicitly hide navigation, menus, and floating actions */
+  .no-print,
+  .print\:hidden,
+  header,
+  aside,
+  nav,
+  .floating-action-button {
+    display: none !important;
+  }
+
+  /* Ensure printed tables use 100% paper width and repeat header cleanly */
   .overflow-x-auto {
     overflow: visible !important;
   }
 
   table {
     width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: fixed !important;
   }
 
-  /* Prevent awkward page-break splits inside table rows and small cards */
+  thead {
+    display: table-header-group !important;
+  }
+
+  tfoot {
+    display: table-footer-group !important;
+  }
+
+  /* Prevent awkward page-break splits */
   tbody tr,
   .print-row-avoid,
   .print-break-inside-avoid {
@@ -86,28 +121,45 @@
     page-break-inside: avoid !important;
   }
 
-  /* Paper-White print override mode (forces clean white background for ink savings) */
+  /* Paper-White print override mode (forces clean white background for physical printing) */
   .print-as-paper {
     background-color: #ffffff !important;
     color: #0f172a !important;
   }
+
   .print-as-paper * {
     border-color: #cbd5e1 !important;
   }
+
   .print-as-paper [class*="bg-slate-50"],
   .print-as-paper [class*="bg-slate-100"],
   .print-as-paper [class*="bg-slate-800"],
   .print-as-paper [class*="bg-slate-900"] {
     background-color: #f8fafc !important;
   }
+
   .print-as-paper [class*="text-white"],
   .print-as-paper [class*="text-slate-900"] {
     color: #0f172a !important;
   }
+
   .print-as-paper [class*="text-slate-300"],
   .print-as-paper [class*="text-slate-400"],
   .print-as-paper [class*="text-slate-500"],
   .print-as-paper [class*="text-slate-600"] {
     color: #475569 !important;
+  }
+
+  .print-as-paper thead {
+    background-color: #f1f5f9 !important;
+  }
+
+  .print-as-paper thead th {
+    color: #334155 !important;
+  }
+
+  .print-as-paper tfoot {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
   }
 }

@@ -7,7 +7,8 @@ import {
   AlertCircle,
   HelpCircle,
   ShieldCheck,
-  Receipt
+  Receipt,
+  Printer
 } from 'lucide-react';
 import { fetchInvoiceReconciliation } from '../api/client.js';
 import { InvoiceReconciliation } from '../../shared/types.js';
@@ -80,13 +81,22 @@ export const InvoiceReconciliationPage: React.FC<InvoiceReconciliationPageProps>
           </p>
         </div>
 
-        <button
-          onClick={handleDownloadCsv}
-          className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-200 transition-all shadow-sm shrink-0 self-start sm:self-auto"
-        >
-          <Download className="w-4 h-4" />
-          <span>Export Reconciled Statement (CSV)</span>
-        </button>
+        <div className="flex items-center space-x-2 shrink-0 self-start sm:self-auto print:hidden">
+          <button
+            onClick={handleDownloadCsv}
+            className="flex items-center space-x-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"
+          >
+            <Download className="w-4 h-4" />
+            <span>Export CSV</span>
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-200 transition-all shadow-sm"
+          >
+            <Printer className="w-4 h-4" />
+            <span>Save as PDF / Print</span>
+          </button>
+        </div>
       </div>
 
       {/* Invoice Summary Card */}

@@ -537,7 +537,7 @@ export function App() {
   return (
     <CurrencyProvider>
       <RoleProvider>
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors print:bg-white print:text-slate-900 print:min-h-0">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors print:min-h-0 print:bg-transparent">
           <div className="print:hidden">
             <Navbar
               authStatus={authStatus}
