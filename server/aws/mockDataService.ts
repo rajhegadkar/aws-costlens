@@ -100,6 +100,7 @@ export class MockDataService {
     const rawServices = [
       { name: 'Amazon Elastic Compute Cloud - Compute', current: 1843.21, prev: 1532.00, cat: 'Compute' as const },
       { name: 'Amazon Relational Database Service', current: 824.50, prev: 1008.60, cat: 'Database' as const },
+      { name: 'Claude Sonnet 5.5 (Amazon Bedrock Edition)', current: 485.00, prev: 310.00, cat: 'AI & ML' as const },
       { name: 'EC2 - Other', current: 486.30, prev: 420.10, cat: 'Compute' as const },
       { name: 'Amazon Simple Storage Service', current: 312.45, prev: 284.33, cat: 'Storage' as const },
       { name: 'Amazon Virtual Private Cloud', current: 248.10, prev: 195.40, cat: 'Networking' as const },
@@ -107,7 +108,9 @@ export class MockDataService {
       { name: 'AWS Data Transfer', current: 142.30, prev: 98.70, cat: 'Networking' as const },
       { name: 'Elastic Load Balancing', current: 98.65, prev: 92.10, cat: 'Networking' as const },
       { name: 'Amazon DynamoDB', current: 64.20, prev: 58.40, cat: 'Database' as const },
+      { name: 'AWS Amplify', current: 45.00, prev: 38.00, cat: 'Compute' as const },
       { name: 'AWS Lambda', current: 38.42, prev: 42.10, cat: 'Compute' as const },
+      { name: 'AWS Cost Explorer', current: 22.50, prev: 18.00, cat: 'Management' as const },
       { name: 'AWS Secrets Manager', current: 18.40, prev: 16.80, cat: 'Security' as const },
       { name: 'Amazon Route 53', current: 12.00, prev: 12.00, cat: 'Networking' as const },
       { name: 'Amazon Simple Notification Service', current: 4.80, prev: 4.20, cat: 'Management' as const },

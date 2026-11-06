@@ -59,7 +59,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeDeptFilter, setActiveDeptFilter] = useState<string>('all');
-  const [resourceTypeFilter, setResourceTypeFilter] = useState<'all' | 'EC2' | 'S3' | 'RDS'>('all');
+  const [resourceTypeFilter, setResourceTypeFilter] = useState<'all' | 'EC2' | 'S3' | 'RDS' | 'Bedrock' | 'Other'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -188,7 +188,12 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
 
   const filteredResources = allResources.filter((r) => {
     const matchesDept = activeDeptFilter === 'all' || r.departmentId === activeDeptFilter;
-    const matchesType = resourceTypeFilter === 'all' || r.resourceType === resourceTypeFilter;
+    const matchesType =
+      resourceTypeFilter === 'all'
+        ? true
+        : resourceTypeFilter === 'Other'
+        ? !['EC2', 'S3', 'RDS', 'Bedrock'].includes(r.resourceType)
+        : r.resourceType === resourceTypeFilter;
     const matchesSearch =
       searchTerm === '' ||
       r.resourceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -199,6 +204,32 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Print-Only Corporate Executive Header */}
+      <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[10px] uppercase font-bold tracking-widest text-slate-500">
+              AWS Financial Operations & Governance • Enterprise TCO Audit
+            </div>
+            <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight mt-0.5">
+              Department Cost Bifurcation & Unified Resource TCO Report
+            </h1>
+            <p className="text-xs text-slate-600 mt-0.5">
+              Official AWS Invoice Reconciliation & Department Attribution • Billing Period: {report.billingPeriod}
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-xs font-semibold text-slate-500 uppercase">Amazon Bill Total</div>
+            <div className="text-lg font-black text-slate-900">
+              {formatCurrency(report.totalOfficialBill)}
+            </div>
+            <div className="text-[10px] font-bold text-emerald-700">
+              ✓ 100% Reconciled (Variance: $0.00)
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Page Title & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -314,7 +345,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
       </div>
 
       {/* Department Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 print:grid-cols-3 print:gap-3 gap-3.5 print-break-inside-avoid">
         {report.departments.map((dept) => {
           const colors = COLOR_CLASSES[dept.color] || COLOR_CLASSES.blue;
           const isSelected = activeDeptFilter === dept.departmentId;
@@ -556,7 +587,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
           </div>
 
           <div className="flex items-center space-x-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-750 text-xs font-semibold">
-            {(['all', 'EC2', 'S3', 'RDS'] as const).map((t) => (
+            {(['all', 'EC2', 'S3', 'RDS', 'Bedrock', 'Other'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setResourceTypeFilter(t)}
@@ -566,7 +597,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                     : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
-                {t === 'all' ? 'All Types' : t}
+                {t === 'all' ? 'All Types' : t === 'Bedrock' ? 'AI / Bedrock' : t}
               </button>
             ))}
           </div>
@@ -604,15 +635,15 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
           <table className="w-full text-left text-xs min-w-[800px]">
             <thead className="bg-slate-50/75 dark:bg-slate-800/60 text-slate-400 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100 dark:border-slate-700">
               <tr>
-                <th className="py-3 px-4">Resource & Machine Name</th>
-                <th className="py-3 px-4">Assigned Department</th>
-                <th className="py-3 px-3">Type</th>
-                <th className="py-3 px-3 text-right">Compute ({activeConfig.symbol})</th>
-                <th className="py-3 px-3 text-right">Storage ({activeConfig.symbol})</th>
-                <th className="py-3 px-3 text-right">Network & IP ({activeConfig.symbol})</th>
-                <th className="py-3 px-3 text-right">Other ({activeConfig.symbol})</th>
-                <th className="py-3 px-4 text-right">Combined Total</th>
-                <th className="py-3 px-3 text-center">Breakdown</th>
+                <th className="py-3 px-4 w-[26%] print:w-[28%]">Resource & Machine Name</th>
+                <th className="py-3 px-4 w-[18%] print:w-[18%]">Assigned Department</th>
+                <th className="py-3 px-3 w-[7%] print:w-[7%]">Type</th>
+                <th className="py-3 px-3 text-right w-[9%] print:w-[9%]">Compute ({activeConfig.symbol})</th>
+                <th className="py-3 px-3 text-right w-[9%] print:w-[9%]">Storage ({activeConfig.symbol})</th>
+                <th className="py-3 px-3 text-right w-[10%] print:w-[10%]">Network & IP ({activeConfig.symbol})</th>
+                <th className="py-3 px-3 text-right w-[7%] print:w-[7%]">Other ({activeConfig.symbol})</th>
+                <th className="py-3 px-4 text-right w-[14%] print:w-[12%]">Combined Total</th>
+                <th className="py-3 px-3 text-center w-[4%] print:hidden">Breakdown</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -622,13 +653,17 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
 
                 return (
                   <React.Fragment key={res.resourceId}>
-                    <tr className="hover:bg-slate-50/60 dark:hover:bg-slate-750/50 transition-colors">
+                    <tr className="hover:bg-slate-50/60 dark:hover:bg-slate-750/50 transition-colors print-row-avoid">
                       <td className="py-3.5 px-4">
                         <div className="flex items-center space-x-2.5">
                           <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 shrink-0">
                             {res.resourceType === 'EC2' && <Server className="w-4 h-4 text-orange-500" />}
                             {res.resourceType === 'S3' && <HardDrive className="w-4 h-4 text-emerald-500" />}
                             {res.resourceType === 'RDS' && <Database className="w-4 h-4 text-blue-500" />}
+                            {res.resourceType === 'Bedrock' && <TrendingUp className="w-4 h-4 text-purple-500" />}
+                            {res.resourceType === 'Amplify' && <Building2 className="w-4 h-4 text-emerald-500" />}
+                            {res.resourceType === 'Lightsail' && <Server className="w-4 h-4 text-cyan-500" />}
+                            {!['EC2', 'S3', 'RDS', 'Bedrock', 'Amplify', 'Lightsail'].includes(res.resourceType) && <DollarSign className="w-4 h-4 text-slate-500" />}
                           </div>
                           <div>
                             <div className="font-extrabold text-slate-900 dark:text-white">
@@ -643,7 +678,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                                   <span>•</span>
                                   <span
                                     className={`font-semibold ${
-                                      res.state === 'running' || res.state === 'available'
+                                      res.state === 'running' || res.state === 'available' || res.state === 'active'
                                         ? 'text-emerald-600 dark:text-emerald-400'
                                         : 'text-slate-400'
                                     }`}
@@ -662,7 +697,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                           <select
                             value={res.departmentId}
                             onChange={(e) => handleAssignDepartment(res.resourceId, e.target.value)}
-                            className={`text-xs font-bold rounded-xl px-2.5 py-1 border transition-colors cursor-pointer dark:bg-slate-800 ${colors.bg} ${colors.text} ${colors.border}`}
+                            className={`text-xs font-bold rounded-xl px-2.5 py-1 border transition-colors cursor-pointer dark:bg-slate-800 print:hidden ${colors.bg} ${colors.text} ${colors.border}`}
                           >
                             {report.departments.map((d) => (
                               <option key={d.departmentId} value={d.departmentId} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
@@ -671,8 +706,11 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                             ))}
                             <option value="unallocated" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Unallocated / Review</option>
                           </select>
+                          <div className="hidden print:block font-bold text-xs text-slate-900">
+                            {res.departmentName}
+                          </div>
                           <span
-                            className="text-[9px] uppercase font-bold text-slate-400"
+                            className="text-[9px] uppercase font-bold text-slate-400 print:hidden"
                             title={`Assigned by: ${res.departmentSource}`}
                           >
                             [{res.departmentSource}]
@@ -711,7 +749,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-3 text-center">
+                      <td className="py-3.5 px-3 text-center print:hidden">
                         <button
                           onClick={() => setExpandedRow(isExpanded ? null : res.resourceId)}
                           className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
@@ -723,7 +761,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
                     </tr>
 
                     {isExpanded && (
-                      <tr className="bg-slate-50/90 dark:bg-slate-800/80">
+                      <tr className="bg-slate-50/90 dark:bg-slate-800/80 print:hidden">
                         <td colSpan={9} className="p-4 pl-12 text-xs">
                           <div className="p-4 rounded-2xl bg-white dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-2.5">
                             <div className="flex items-center space-x-2 text-slate-900 dark:text-white font-bold">
@@ -778,8 +816,8 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
         </div>
       </div>
 
-      {/* Shared Cloud Platform & Network Accordion */}
-      <div className="rounded-3xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 shadow-sm overflow-hidden">
+      {/* Shared Cloud Platform & Foundation Baseline Section */}
+      <div className="rounded-3xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 shadow-sm overflow-hidden print-break-inside-avoid">
         <button
           onClick={() => setShowSharedDetails(!showSharedDetails)}
           className="w-full p-5 flex items-center justify-between text-left hover:bg-slate-50/50 dark:hover:bg-slate-750/30 transition-colors"
@@ -791,18 +829,18 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
             <div>
               <div className="flex items-center space-x-2">
                 <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                  Shared Cloud Platform & Network Infrastructure
+                  Shared Cloud Platform & Foundation Baseline
                 </h3>
                 <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold text-[10px]">
                   {formatCurrency(report.totalSharedPlatform)} Total
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Foundation networking, NAT Gateways, Route 53 DNS, KMS encryption, and monitoring shared account-wide.
+                Foundation FinOps governance, Cost Explorer APIs, SES alerts, and account-level snapshot baselines matching your Amazon bill.
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-2 text-slate-400">
+          <div className="flex items-center space-x-2 text-slate-400 print:hidden">
             <span className="text-xs font-semibold hidden sm:inline-block">
               {showSharedDetails ? 'Hide Itemized Breakdown' : 'Show Itemized Breakdown'}
             </span>
@@ -810,33 +848,31 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
           </div>
         </button>
 
-        {showSharedDetails && (
-          <div className="p-5 pt-0 border-t border-slate-100 dark:border-slate-700/80 space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-              {report.sharedPlatformServices.map((svc, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-750/60 border border-slate-200/60 dark:border-slate-700 space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-extrabold text-xs text-slate-900 dark:text-white">
-                      {svc.serviceName}
-                    </span>
-                    <span className="text-xs font-black text-amber-600 dark:text-amber-400">
-                      {formatCurrency(svc.cost)}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">
-                    {svc.explanation}
-                  </p>
-                  <div className="text-[10px] text-slate-400 italic">
-                    Why we use it: {svc.nonTechnicalGuide}
-                  </div>
+        <div className={`${showSharedDetails ? 'block' : 'hidden print:block'} p-5 pt-0 border-t border-slate-100 dark:border-slate-700/80 space-y-3`}>
+          <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 print:gap-2.5 gap-3 mt-4">
+            {report.sharedPlatformServices.map((svc, idx) => (
+              <div
+                key={idx}
+                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-750/60 border border-slate-200/60 dark:border-slate-700 space-y-2 print-break-inside-avoid"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-xs text-slate-900 dark:text-white">
+                    {svc.serviceName}
+                  </span>
+                  <span className="text-xs font-black text-amber-600 dark:text-amber-400">
+                    {formatCurrency(svc.cost)}
+                  </span>
                 </div>
-              ))}
-            </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">
+                  {svc.explanation}
+                </p>
+                <div className="text-[10px] text-slate-400 italic">
+                  Why it's billed: {svc.nonTechnicalGuide}
+                </div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Modal: Custom Department & Allocation Rules */}

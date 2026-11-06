@@ -124,4 +124,38 @@ describe('Version 2.0: Department Cost Bifurcation & Unified Resource TCO', () =
       expect(shared.nonTechnicalGuide).toBeDefined();
     }
   });
+
+  it('matches all costs as per the actual AWS bill with 100% mathematical precision and zero variance', async () => {
+    setDemoMode(false);
+    const report = await DepartmentService.getDepartmentBifurcationReport('2026-11');
+
+    expect(report).toBeDefined();
+    expect(report.totalOfficialBill).toBeGreaterThan(0);
+    expect(report.isReconciled).toBe(true);
+    expect(report.reconciliationVariance).toBe(0.00);
+
+    // Verify Bedrock AI models are directly attributed to Data Science & AI department
+    const aiDept = report.departments.find(d => d.departmentId === 'dept-data-ai');
+    expect(aiDept).toBeDefined();
+    const bedrockResources = aiDept?.resources.filter(r => r.resourceType === 'Bedrock');
+    expect(bedrockResources && bedrockResources.length > 0).toBe(true);
+
+    // Verify shared network traceability items match actual bill line items
+    expect(report.sharedNetworkTraceability.length).toBeGreaterThanOrEqual(2);
+    const vpcTrace = report.sharedNetworkTraceability.find(n => n.networkCategory.includes('VPC'));
+    expect(vpcTrace).toBeDefined();
+
+    // Verify shared platform services itemizes actual platform services without synthetic fake values
+    expect(report.sharedPlatformServices.length).toBeGreaterThan(0);
+    const costExplorer = report.sharedPlatformServices.find(s => s.serviceName.includes('Cost Explorer'));
+    expect(costExplorer).toBeDefined();
+
+    // Sum verification
+    const totalAllocatedSum =
+      report.totalDepartmentAllocated +
+      report.totalSharedPlatform +
+      report.taxesAndCredits;
+    expect(Math.abs(report.totalOfficialBill - totalAllocatedSum)).toBeLessThan(0.05);
+  });
 });
+

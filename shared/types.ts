@@ -394,7 +394,7 @@ export interface DepartmentDefinition {
 export interface ResourceCostItemTCO {
   resourceId: string;
   resourceName: string;
-  resourceType: 'EC2' | 'S3' | 'RDS' | 'Shared';
+  resourceType: 'EC2' | 'S3' | 'RDS' | 'Bedrock' | 'Amplify' | 'Lightsail' | 'Shared' | string;
   departmentId: string;
   departmentName: string;
   departmentColor: string;
@@ -465,7 +465,7 @@ export interface SharedNetworkDepartmentAllocation {
 export interface SharedNetworkTraceItem {
   id: string;
   resourceName: string;
-  networkCategory: 'NAT Gateway' | 'Inter-AZ Transfer' | 'Internet Egress' | 'DNS (Route 53)' | 'Public / Elastic IPs' | 'Transit Gateway / VPN' | 'CloudFront CDN';
+  networkCategory: 'NAT Gateway' | 'Inter-AZ Transfer' | 'Internet Egress' | 'DNS (Route 53)' | 'Public / Elastic IPs' | 'Transit Gateway / VPN' | 'CloudFront CDN' | 'VPC Networking' | string;
   costDriver: string;
   region: string;
   regionName: string;
