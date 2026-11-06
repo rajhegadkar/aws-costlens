@@ -157,5 +157,23 @@ describe('Version 2.0: Department Cost Bifurcation & Unified Resource TCO', () =
       report.taxesAndCredits;
     expect(Math.abs(report.totalOfficialBill - totalAllocatedSum)).toBeLessThan(0.05);
   });
+
+  it('generates fully reconciled CSV export data with department breakdown and resource TCO', async () => {
+    const report = await DepartmentService.getDepartmentBifurcationReport('2026-11');
+    expect(report.departments.length).toBeGreaterThan(0);
+
+    const allResources = [
+      ...report.departments.flatMap(d => d.resources),
+      ...report.unallocatedResources
+    ];
+    expect(allResources.length).toBeGreaterThan(0);
+    for (const r of allResources) {
+      expect(r.departmentName).toBeDefined();
+      expect(r.resourceId).toBeDefined();
+      expect(r.totalCost).toBeGreaterThanOrEqual(0);
+      expect(r.costFormula).toBeDefined();
+      expect(r.nonTechnicalSummary).toBeDefined();
+    }
+  });
 });
 

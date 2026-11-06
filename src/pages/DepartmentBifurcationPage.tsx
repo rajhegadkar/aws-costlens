@@ -29,7 +29,9 @@ import {
   fetchDepartmentConfig,
   saveDepartmentConfig,
   assignResourceDepartment,
-  deleteDepartment
+  deleteDepartment,
+  downloadDepartmentCsvBlob,
+  getAuthToken
 } from '../api/client.js';
 import {
   DepartmentBifurcationReport,
@@ -64,6 +66,7 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showSharedDetails, setShowSharedDetails] = useState(false);
+  const [exportingCsv, setExportingCsv] = useState(false);
 
   // Modal State
   const [departmentsList, setDepartmentsList] = useState<DepartmentDefinition[]>([]);
@@ -96,11 +99,30 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
     loadData(false);
   }, [selectedMonth]);
 
-  const handleExportCsv = () => {
-    const url = selectedMonth
-      ? `/api/cost/departments/export?month=${encodeURIComponent(selectedMonth)}`
-      : `/api/cost/departments/export`;
-    window.location.href = url;
+  const handleExportCsv = async () => {
+    try {
+      setExportingCsv(true);
+      const blob = await downloadDepartmentCsvBlob(selectedMonth);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const cleanMonth = selectedMonth && selectedMonth !== 'current' ? selectedMonth : 'current';
+      link.download = `aws-costlens-v2-department-bifurcation-${cleanMonth.replace(/[^a-zA-Z0-9-]/g, '_')}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      console.error('Blob CSV download failed, attempting authenticated query URL fallback:', err);
+      const token = getAuthToken();
+      const monthParam = selectedMonth && selectedMonth !== 'current' ? `month=${encodeURIComponent(selectedMonth)}` : '';
+      const tokenParam = token ? `token=${encodeURIComponent(token)}` : '';
+      const queryParams = [monthParam, tokenParam].filter(Boolean).join('&');
+      const fallbackUrl = `/api/cost/departments/export${queryParams ? `?${queryParams}` : ''}`;
+      window.location.href = fallbackUrl;
+    } finally {
+      setExportingCsv(false);
+    }
   };
 
   const handleAssignDepartment = async (resourceId: string, departmentId: string) => {
@@ -260,10 +282,12 @@ export const DepartmentBifurcationPage: React.FC<DepartmentBifurcationPageProps>
 
           <button
             onClick={handleExportCsv}
-            className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-200 transition-all shadow-sm"
+            disabled={exportingCsv}
+            className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-200 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            title="Export Reconciled Department Bifurcation CSV"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export CSV</span>
+            <Download className={`w-3.5 h-3.5 ${exportingCsv ? 'animate-bounce text-orange-400' : ''}`} />
+            <span>{exportingCsv ? 'Exporting...' : 'Export CSV'}</span>
           </button>
 
           <button

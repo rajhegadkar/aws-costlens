@@ -150,9 +150,8 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
   }
 
   const authHeader = req.headers.authorization;
-  const token = authHeader?.startsWith('Bearer ')
-    ? authHeader.slice(7).trim()
-    : (req.query.token as string);
+  const token = (authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null)
+    || (typeof req.query.token === 'string' ? req.query.token.trim() : null);
 
   if (!token) {
     return res.status(401).json({ error: 'Authentication required. Please log in.' });

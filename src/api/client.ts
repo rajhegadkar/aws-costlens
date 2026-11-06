@@ -319,6 +319,24 @@ export async function deleteDepartment(departmentId: string): Promise<Department
   return data.departments;
 }
 
+export async function downloadDepartmentCsvBlob(month?: string): Promise<Blob> {
+  const url = month && month !== 'current'
+    ? `${API_BASE}/cost/departments/export?month=${encodeURIComponent(month)}`
+    : `${API_BASE}/cost/departments/export`;
+  const res = await apiFetch(url);
+  if (!res.ok) {
+    let errMsg = `CSV download failed (${res.status})`;
+    try {
+      const err = await res.json();
+      if (err.error) errMsg = err.error;
+    } catch {
+      // ignore
+    }
+    throw new Error(errMsg);
+  }
+  return res.blob();
+}
+
 // ==========================================
 // VERSION 3.0: FINOPS WASTE HUNTER & FORECASTING
 // ==========================================
