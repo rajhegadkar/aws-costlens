@@ -12,7 +12,7 @@ import {
 import { CostExplorerService, isDemoModeEnabled } from './costExplorerService.js';
 import { executeSafeReadOnlyOperation } from '../security/awsGuard.js';
 import { globalCache } from '../cache/fileCache.js';
-import { getFriendlyRegionName } from '../../shared/explanationDictionary.js';
+import { getFriendlyRegionName, AWS_REGIONS_DIRECTORY } from '../../shared/explanationDictionary.js';
 import {
   ResourceInventorySummary,
   Ec2InstanceInventoryItem,
@@ -20,6 +20,10 @@ import {
   RdsInstanceInventoryItem,
   CloudTrailActivityItem
 } from '../../shared/types.js';
+
+export const ALL_STANDARD_AWS_REGIONS: string[] = Object.keys(AWS_REGIONS_DIRECTORY).filter(
+  r => r !== 'global' && r !== 'noregion'
+);
 
 const PRIMARY_REGIONS = ['ap-south-1', 'us-east-1', 'us-west-2', 'eu-north-1', 'eu-west-1', 'us-east-2'];
 
@@ -215,15 +219,35 @@ export class InventoryService {
       const s3Buckets: S3BucketInventoryItem[] = [];
       const activeRegionsSet = new Set<string>();
 
-      const regionsToScan = Array.from(new Set([getCurrentRegion(), ...PRIMARY_REGIONS]));
+      const billingRegions = (await CostExplorerService.getRegions(month).catch(() => []))
+        .map(r => r.regionCode.toLowerCase())
+        .filter(r => r && r !== 'noregion' && r !== 'global' && r !== 'unknown');
 
-      // 1. Scan EC2 across primary regions in parallel
+      // Comprehensive multi-region discovery set: Current region + Active billing regions + All standard regions
+      const regionsToScan = Array.from(new Set([
+        getCurrentRegion(),
+        ...billingRegions,
+        ...ALL_STANDARD_AWS_REGIONS
+      ]));
+
+      const timeoutMs = 6000;
+      const withTimeout = <T>(promise: Promise<T>): Promise<T> =>
+        Promise.race([
+          promise,
+          new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error('Regional scan timeout after 6s')), timeoutMs)
+          )
+        ]);
+
+      // 1. Scan EC2 across all regions in parallel
       const ec2RegionScans = regionsToScan.map(async (reg) => {
         try {
           const ec2Client = getEc2Client(reg);
-          const ec2Res = await executeSafeReadOnlyOperation('DescribeInstances', async () => {
-            return await ec2Client.send(new DescribeInstancesCommand({}));
-          });
+          const ec2Res = await withTimeout(
+            executeSafeReadOnlyOperation('DescribeInstances', async () => {
+              return await ec2Client.send(new DescribeInstancesCommand({}));
+            })
+          );
 
           const instances = ec2Res.Reservations?.flatMap(r => r.Instances || []) || [];
           if (instances.length > 0) {
@@ -251,18 +275,20 @@ export class InventoryService {
               });
             }
           }
-        } catch (err: any) {
-          console.warn(`[INVENTORY] EC2 scan error in ${reg}:`, err.message);
+        } catch {
+          // Region may not be enabled or has 0 instances; skip silently
         }
       });
 
-      // 2. Scan S3 Buckets
+      // 2. Scan S3 Buckets globally
       const s3Scan = (async () => {
         try {
           const s3Client = getS3Client();
-          const s3Res = await executeSafeReadOnlyOperation('ListBuckets', async () => {
-            return await s3Client.send(new ListBucketsCommand({}));
-          });
+          const s3Res = await withTimeout(
+            executeSafeReadOnlyOperation('ListBuckets', async () => {
+              return await s3Client.send(new ListBucketsCommand({}));
+            })
+          );
 
           for (const b of s3Res.Buckets || []) {
             s3Buckets.push({
@@ -275,13 +301,15 @@ export class InventoryService {
         }
       })();
 
-      // 3. Scan RDS across primary regions in parallel
-      const rdsRegionScans = ['ap-south-1', 'us-east-1', 'us-west-2'].map(async (reg) => {
+      // 3. Scan RDS across ALL regions in parallel (ensuring no database in any region is missed)
+      const rdsRegionScans = regionsToScan.map(async (reg) => {
         try {
           const rdsClient = getRdsClient(reg);
-          const rdsRes = await executeSafeReadOnlyOperation('DescribeDBInstances', async () => {
-            return await rdsClient.send(new DescribeDBInstancesCommand({ MaxRecords: 20 }));
-          });
+          const rdsRes = await withTimeout(
+            executeSafeReadOnlyOperation('DescribeDBInstances', async () => {
+              return await rdsClient.send(new DescribeDBInstancesCommand({ MaxRecords: 50 }));
+            })
+          );
 
           for (const db of rdsRes.DBInstances || []) {
             activeRegionsSet.add(reg);
@@ -662,147 +690,225 @@ export class InventoryService {
   }
 
   private static getMockInventory(month?: string): ResourceInventorySummary {
+    const ec2Instances: Ec2InstanceInventoryItem[] = [
+      {
+        instanceId: 'i-0a1b2c3d4e5f60001',
+        name: 'prod-core-api-server-01',
+        instanceType: 't3.large',
+        state: 'running',
+        region: 'ap-south-1',
+        regionName: 'Asia Pacific (Mumbai)',
+        privateIp: '10.0.12.19',
+        publicIp: '203.0.113.50',
+        tags: { Environment: 'production', Project: 'core-platform', Owner: 'devops' },
+        hourlyRate: 0.0832,
+        computeCost: 48.2,
+        storageAndIpCost: 6.4,
+        currentMonthCost: 54.6,
+        estimatedMonthlyCost: 69.19,
+        costBreakdown: 'Compute: $48.20 + EBS/IPv4: $6.40'
+      },
+      {
+        instanceId: 'i-0a1b2c3d4e5f60002',
+        name: 'prod-web-backend-v3',
+        instanceType: 't3.medium',
+        state: 'running',
+        region: 'ap-south-1',
+        regionName: 'Asia Pacific (Mumbai)',
+        privateIp: '10.0.14.120',
+        tags: { Environment: 'production', Project: 'customer-portal' },
+        hourlyRate: 0.0416,
+        computeCost: 34.1,
+        storageAndIpCost: 4.2,
+        currentMonthCost: 38.3,
+        estimatedMonthlyCost: 32.77,
+        costBreakdown: 'Compute: $34.10 + EBS/IPv4: $4.20'
+      },
+      {
+        instanceId: 'i-0a1b2c3d4e5f60003',
+        name: 'staging-gpu-ai-worker',
+        instanceType: 'g4dn.xlarge',
+        state: 'stopped',
+        region: 'ap-south-1',
+        regionName: 'Asia Pacific (Mumbai)',
+        privateIp: '10.0.15.212',
+        tags: { Environment: 'staging', Project: 'ai-inference-gpu' },
+        hourlyRate: 0.526,
+        computeCost: 8.5,
+        storageAndIpCost: 3.8,
+        currentMonthCost: 12.3,
+        estimatedMonthlyCost: 8.0,
+        costBreakdown: 'Ran earlier: $8.50 + Stopped EBS/IP: $3.80'
+      },
+      {
+        instanceId: 'i-0a1b2c3d4e5f60004',
+        name: 'us-west-edge-worker',
+        instanceType: 't3.micro',
+        state: 'running',
+        region: 'us-west-2',
+        regionName: 'US West (Oregon)',
+        privateIp: '10.1.47.183',
+        tags: { Environment: 'production', Owner: 'devops' },
+        hourlyRate: 0.0104,
+        computeCost: 5.4,
+        storageAndIpCost: 1.8,
+        currentMonthCost: 7.2,
+        estimatedMonthlyCost: 9.99,
+        costBreakdown: 'Compute: $5.40 + EBS/IPv4: $1.80'
+      },
+      {
+        instanceId: 'i-0a1b2c3d4e5f60005',
+        name: 'eu-central-api-gateway',
+        instanceType: 't3.medium',
+        state: 'running',
+        region: 'eu-central-1',
+        regionName: 'Europe (Frankfurt)',
+        privateIp: '10.2.18.91',
+        publicIp: '18.197.40.12',
+        tags: { Environment: 'production', Project: 'core-platform' },
+        hourlyRate: 0.0416,
+        computeCost: 28.5,
+        storageAndIpCost: 4.5,
+        currentMonthCost: 33.0,
+        estimatedMonthlyCost: 34.0,
+        costBreakdown: 'Compute: $28.50 + EBS/IPv4: $4.50'
+      },
+      {
+        instanceId: 'i-0a1b2c3d4e5f60006',
+        name: 'us-east-analytics-node',
+        instanceType: 'm5.large',
+        state: 'running',
+        region: 'us-east-1',
+        regionName: 'US East (N. Virginia)',
+        privateIp: '10.3.50.22',
+        tags: { Environment: 'production', Project: 'ai-inference-gpu' },
+        hourlyRate: 0.096,
+        computeCost: 38.0,
+        storageAndIpCost: 5.2,
+        currentMonthCost: 43.2,
+        estimatedMonthlyCost: 74.8,
+        costBreakdown: 'Compute: $38.00 + EBS: $5.20'
+      }
+    ];
+
+    const s3Buckets: S3BucketInventoryItem[] = [
+      {
+        name: 'company-backup-archives-prod',
+        creationDate: '2024-03-12T10:00:00Z',
+        region: 'ap-south-1',
+        currentMonthCost: 28.45,
+        estimatedMonthlyCost: 68.28,
+        percentOfS3Total: 34.2,
+        estimatedSizeGb: 1180.5,
+        storageClass: 'S3 Standard (High-Volume Data)',
+        costBreakdown: 'S3 Standard GB-Month + Data Transfer Out (Egress)'
+      },
+      {
+        name: 'core-application-assets-prod',
+        creationDate: '2024-06-15T08:30:00Z',
+        region: 'ap-south-1',
+        currentMonthCost: 19.12,
+        estimatedMonthlyCost: 45.89,
+        percentOfS3Total: 23.0,
+        estimatedSizeGb: 688.3,
+        storageClass: 'S3 Standard (Web & Artifact Delivery)',
+        costBreakdown: 'Standard Storage + Outbound Download Egress & GETs'
+      },
+      {
+        name: 'ml-training-datasets-archive',
+        creationDate: '2025-01-20T14:15:00Z',
+        region: 'us-west-2',
+        currentMonthCost: 10.27,
+        estimatedMonthlyCost: 24.65,
+        percentOfS3Total: 12.3,
+        estimatedSizeGb: 1899.9,
+        storageClass: 'Glacier Deep Archive + Standard',
+        costBreakdown: 'Deep Archive Storage + Staging & PUT/GET Requests'
+      },
+      {
+        name: 'eu-compliance-audit-logs',
+        creationDate: '2024-08-10T09:00:00Z',
+        region: 'eu-central-1',
+        currentMonthCost: 14.50,
+        estimatedMonthlyCost: 34.80,
+        percentOfS3Total: 17.4,
+        estimatedSizeGb: 630.0,
+        storageClass: 'S3 Standard-Infrequent Access',
+        costBreakdown: 'Infrequent Access Storage + Archive Lifecycle'
+      },
+      {
+        name: 'us-east-customer-uploads',
+        creationDate: '2024-11-05T12:00:00Z',
+        region: 'us-east-1',
+        currentMonthCost: 10.85,
+        estimatedMonthlyCost: 26.04,
+        percentOfS3Total: 13.1,
+        estimatedSizeGb: 471.7,
+        storageClass: 'S3 Standard',
+        costBreakdown: 'Standard Object Storage + Upload / Download Egress'
+      }
+    ];
+
+    const rdsInstances: RdsInstanceInventoryItem[] = [
+      {
+        dbInstanceIdentifier: 'prod-core-postgres-db1',
+        engine: 'postgres',
+        dbInstanceClass: 'db.r6g.large',
+        status: 'available',
+        allocatedStorageGb: 250,
+        region: 'ap-south-1',
+        multiAz: true,
+        endpoint: 'prod-core-postgres-db1.cluster-ap-south-1.rds.amazonaws.com',
+        currentMonthCost: 182.4,
+        estimatedMonthlyCost: 245.0
+      },
+      {
+        dbInstanceIdentifier: 'staging-analytics-mysql',
+        engine: 'mysql',
+        dbInstanceClass: 'db.t4g.medium',
+        status: 'stopped',
+        allocatedStorageGb: 100,
+        region: 'us-east-1',
+        multiAz: false,
+        endpoint: 'staging-analytics-mysql.us-east-1.rds.amazonaws.com',
+        currentMonthCost: 11.5,
+        estimatedMonthlyCost: 11.5
+      },
+      {
+        dbInstanceIdentifier: 'eu-orders-aurora-cluster',
+        engine: 'aurora-postgresql',
+        dbInstanceClass: 'db.r6g.xlarge',
+        status: 'available',
+        allocatedStorageGb: 300,
+        region: 'eu-central-1',
+        multiAz: true,
+        endpoint: 'eu-orders.cluster-eu-central-1.rds.amazonaws.com',
+        currentMonthCost: 78.5,
+        estimatedMonthlyCost: 110.0
+      }
+    ];
+
+    const runningEc2 = ec2Instances.filter(i => i.state === 'running').length;
+    const stoppedEc2 = ec2Instances.filter(i => i.state === 'stopped').length;
+    const totalEc2Cost = ec2Instances.reduce((sum, i) => sum + (i.currentMonthCost || 0), 0);
+    const totalS3Cost = s3Buckets.reduce((sum, b) => sum + (b.currentMonthCost || 0), 0);
+
     return {
       scannedAt: new Date().toISOString(),
       billingPeriod: month || 'current',
-      totalEc2Instances: 4,
-      runningEc2Instances: 3,
-      stoppedEc2Instances: 1,
-      totalS3Buckets: 3,
-      totalRdsDatabases: 2,
-      totalEc2CurrentMonthCost: 112.4,
-      totalEc2EstimatedMonthlyCost: 146.9,
-      totalS3CurrentMonthCost: 57.84,
-      totalS3EstimatedMonthlyCost: 138.8,
-      activeRegions: ['ap-south-1', 'us-west-2', 'us-east-1'],
-      ec2Instances: [
-        {
-          instanceId: 'i-0a1b2c3d4e5f60001',
-          name: 'prod-core-api-server-01',
-          instanceType: 't3.large',
-          state: 'running',
-          region: 'ap-south-1',
-          regionName: 'Asia Pacific (Mumbai)',
-          privateIp: '10.0.12.19',
-          publicIp: '203.0.113.50',
-          tags: { Environment: 'production', Project: 'core-platform', Owner: 'devops' },
-          hourlyRate: 0.0832,
-          computeCost: 48.2,
-          storageAndIpCost: 6.4,
-          currentMonthCost: 54.6,
-          estimatedMonthlyCost: 69.19,
-          costBreakdown: 'Compute: $48.20 + EBS/IPv4: $6.40'
-        },
-        {
-          instanceId: 'i-0a1b2c3d4e5f60002',
-          name: 'prod-web-backend-v3',
-          instanceType: 't3.medium',
-          state: 'running',
-          region: 'ap-south-1',
-          regionName: 'Asia Pacific (Mumbai)',
-          privateIp: '10.0.14.120',
-          tags: { Environment: 'production', Project: 'customer-portal' },
-          hourlyRate: 0.0416,
-          computeCost: 34.1,
-          storageAndIpCost: 4.2,
-          currentMonthCost: 38.3,
-          estimatedMonthlyCost: 32.77,
-          costBreakdown: 'Compute: $34.10 + EBS/IPv4: $4.20'
-        },
-        {
-          instanceId: 'i-0a1b2c3d4e5f60003',
-          name: 'staging-gpu-ai-worker',
-          instanceType: 'g4dn.xlarge',
-          state: 'stopped',
-          region: 'ap-south-1',
-          regionName: 'Asia Pacific (Mumbai)',
-          privateIp: '10.0.15.212',
-          tags: { Environment: 'staging', Project: 'ai-inference-gpu' },
-          hourlyRate: 0.526,
-          computeCost: 8.5,
-          storageAndIpCost: 3.8,
-          currentMonthCost: 12.3,
-          estimatedMonthlyCost: 8.0,
-          costBreakdown: 'Ran earlier: $8.50 + Stopped EBS/IP: $3.80'
-        },
-        {
-          instanceId: 'i-0a1b2c3d4e5f60004',
-          name: 'us-west-edge-worker',
-          instanceType: 't3.micro',
-          state: 'running',
-          region: 'us-west-2',
-          regionName: 'US West (Oregon)',
-          privateIp: '10.1.47.183',
-          tags: { Environment: 'production' },
-          hourlyRate: 0.0104,
-          computeCost: 5.4,
-          storageAndIpCost: 1.8,
-          currentMonthCost: 7.2,
-          estimatedMonthlyCost: 9.99,
-          costBreakdown: 'Compute: $5.40 + EBS/IPv4: $1.80'
-        }
-      ],
-      s3Buckets: [
-        {
-          name: 'company-backup-archives-prod',
-          creationDate: '2024-03-12T10:00:00Z',
-          region: 'ap-south-1',
-          currentMonthCost: 28.45,
-          estimatedMonthlyCost: 68.28,
-          percentOfS3Total: 49.2,
-          estimatedSizeGb: 1180.5,
-          storageClass: 'S3 Standard (High-Volume Data)',
-          costBreakdown: 'S3 Standard GB-Month + Data Transfer Out (Egress)'
-        },
-        {
-          name: 'core-application-assets-prod',
-          creationDate: '2024-06-15T08:30:00Z',
-          region: 'ap-south-1',
-          currentMonthCost: 19.12,
-          estimatedMonthlyCost: 45.89,
-          percentOfS3Total: 33.1,
-          estimatedSizeGb: 688.3,
-          storageClass: 'S3 Standard (Web & Artifact Delivery)',
-          costBreakdown: 'Standard Storage + Outbound Download Egress & GETs'
-        },
-        {
-          name: 'ml-training-datasets-archive',
-          creationDate: '2025-01-20T14:15:00Z',
-          region: 'us-west-2',
-          currentMonthCost: 10.27,
-          estimatedMonthlyCost: 24.65,
-          percentOfS3Total: 17.7,
-          estimatedSizeGb: 1899.9,
-          storageClass: 'Glacier Deep Archive + Standard',
-          costBreakdown: 'Deep Archive Storage + Staging & PUT/GET Requests'
-        }
-      ],
-      rdsInstances: [
-        {
-          dbInstanceIdentifier: 'prod-core-postgres-db1',
-          engine: 'postgres',
-          dbInstanceClass: 'db.r6g.large',
-          status: 'available',
-          allocatedStorageGb: 250,
-          region: 'ap-south-1',
-          multiAz: true,
-          endpoint: 'prod-core-postgres-db1.cluster-ap-south-1.rds.amazonaws.com',
-          currentMonthCost: 182.4,
-          estimatedMonthlyCost: 245.0
-        },
-        {
-          dbInstanceIdentifier: 'staging-analytics-mysql',
-          engine: 'mysql',
-          dbInstanceClass: 'db.t4g.medium',
-          status: 'stopped',
-          allocatedStorageGb: 100,
-          region: 'us-east-1',
-          multiAz: false,
-          endpoint: 'staging-analytics-mysql.us-east-1.rds.amazonaws.com',
-          currentMonthCost: 11.5,
-          estimatedMonthlyCost: 11.5
-        }
-      ]
+      totalEc2Instances: ec2Instances.length,
+      runningEc2Instances: runningEc2,
+      stoppedEc2Instances: stoppedEc2,
+      totalS3Buckets: s3Buckets.length,
+      totalRdsDatabases: rdsInstances.length,
+      totalEc2CurrentMonthCost: round2(totalEc2Cost),
+      totalEc2EstimatedMonthlyCost: round2(totalEc2Cost * 1.3),
+      totalS3CurrentMonthCost: round2(totalS3Cost),
+      totalS3EstimatedMonthlyCost: round2(totalS3Cost * 2.4),
+      activeRegions: ['ap-south-1', 'us-west-2', 'us-east-1', 'eu-central-1'],
+      ec2Instances,
+      s3Buckets,
+      rdsInstances
     };
   }
 

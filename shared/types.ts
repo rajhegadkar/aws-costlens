@@ -413,6 +413,13 @@ export interface ResourceCostItemTCO {
   tags?: Record<string, string>;
   rawItem?: any;
 }
+ 
+export interface DepartmentSharedNetworkAllocation {
+  networkCategory: string; // e.g. 'NAT Gateway', 'Inter-AZ Transfer', 'Internet Egress', 'Route 53 DNS', 'Public IPv4'
+  cost: number;
+  percentage: number;
+  basis: string;
+}
 
 export interface DepartmentCostSummary {
   departmentId: string;
@@ -423,14 +430,18 @@ export interface DepartmentCostSummary {
   budgetUsedPercent?: number;
   projectedMonthEnd?: number;
   budgetStatus?: 'on_track' | 'approaching_limit' | 'exceeded';
-  totalCost: number;
+  totalCost: number; // Fully loaded or primary department total
+  directCost?: number; // Sum of direct assigned EC2, S3, RDS
+  allocatedSharedNetworkCost?: number; // Department's bifurcated share of shared networking
+  fullyLoadedTotalCost?: number; // directCost + allocatedSharedNetworkCost
   percentageOfBill: number;
   computeCost: number;
   storageCost: number;
-  networkingCost: number;
+  networkingCost: number; // Dedicated direct networking
   otherCost: number;
   resourceCount: number;
   resources: ResourceCostItemTCO[];
+  sharedNetworkAllocations?: DepartmentSharedNetworkAllocation[];
 }
 
 export interface SharedPlatformServiceItem {
@@ -442,10 +453,33 @@ export interface SharedPlatformServiceItem {
   nonTechnicalGuide: string;
 }
 
+export interface SharedNetworkDepartmentAllocation {
+  departmentId: string;
+  departmentName: string;
+  departmentColor: string;
+  allocatedCost: number;
+  allocatedPercentage: number;
+  allocationBasis: string;
+}
+
+export interface SharedNetworkTraceItem {
+  id: string;
+  resourceName: string;
+  networkCategory: 'NAT Gateway' | 'Inter-AZ Transfer' | 'Internet Egress' | 'DNS (Route 53)' | 'Public / Elastic IPs' | 'Transit Gateway / VPN' | 'CloudFront CDN';
+  costDriver: string;
+  region: string;
+  regionName: string;
+  totalCost: number;
+  departmentAllocations: SharedNetworkDepartmentAllocation[];
+  recommendation: string;
+}
+
 export interface DepartmentBifurcationReport {
   billingPeriod: string;
   totalOfficialBill: number;
   totalDepartmentAllocated: number;
+  totalDirectCost?: number;
+  totalSharedNetworkCost?: number;
   totalSharedPlatform: number;
   taxesAndCredits: number;
   reconciliationVariance: number; // Strictly 0.00
@@ -453,6 +487,7 @@ export interface DepartmentBifurcationReport {
   departments: DepartmentCostSummary[];
   unallocatedResources: ResourceCostItemTCO[];
   sharedPlatformServices: SharedPlatformServiceItem[];
+  sharedNetworkTraceability?: SharedNetworkTraceItem[];
   availableDepartments: DepartmentDefinition[];
 }
 
